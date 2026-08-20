@@ -7,8 +7,8 @@
 - Academic year is a dropdown; picking a year filters the semester dropdown to only the semesters valid for that year (SY -> III/IV, TY -> V/VI, LY -> VII/VIII).
 - Selecting the year auto-routes the paper to the DQC that owns that year level; the assignee is shown before submit and can be overridden.
 - Paper sets carry a **BT level** tag of **H** (High) or **M** (Medium) instead of the current Easy/Medium/Hard label.
-- **Print direct** button renders the exam-facing paper with Course Outcomes hidden; the internal review view still shows CO/BT columns.
-- Downloaded PDFs always print the Somaiya logo in the page header.
+- **Printing and downloading live only in the Exam Coordinator login, and only after the DQC approves.** Before approval the paper cannot be printed or downloaded anywhere; the designer and DQC screens keep a read-only internal preview with CO/BT columns visible.
+- The coordinator's **Print direct** button opens the exam-facing paper with Course Outcomes hidden and sends it straight to the printer; **Download PDF / Word** produces the same CO-free exam copy with the Somaiya logo in the page header.
 - New **Index / Tracking dashboard**: one row per assignment showing course, year, assigned DQC, submitter, submitted-at, and status — so it is clear at a glance who has and has not submitted.
 
 ## Accounts, sign-up and password reset
