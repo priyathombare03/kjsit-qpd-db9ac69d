@@ -11,6 +11,19 @@
 - Downloaded PDFs always print the Somaiya logo in the page header.
 - New **Index / Tracking dashboard**: one row per assignment showing course, year, assigned DQC, submitter, submitted-at, and status — so it is clear at a glance who has and has not submitted.
 
+## Accounts, sign-up and password reset
+
+- **Faculty self-registration**: a Register screen (name, institution, department, email, password) creates the account with the `designer` (faculty) role. New accounts land in a `pending` state until an HOD approves them, so strangers cannot enter the department workspace.
+- HOD sees a **Pending faculty** list on their dashboard and approves or rejects; approval flips the profile to `active` and the faculty member gets a notification.
+- **Forgot password** link on the login screen for every role: email entry -> reset email -> `/auth/reset` screen to set a new password. Reset uses the built-in auth email flow, so no passwords are ever handled by app code.
+- **Realtime notifications**: the bell in the header subscribes to live inserts on `notifications` instead of polling every 15 seconds, so approval, assignment, decision and reminder events appear immediately. A notifications panel lists them with read/unread state.
+
+## Submission reminders
+
+- The tracking dashboard flags any assignment past its due date with nothing submitted.
+- The Exam Coordinator (and HOD) can press **Send reminder** on such a row — individually or "remind all pending" — which writes a notification to the faculty member (delivered live via the bell) and records `reminder_count` / `last_reminded_at` on the assignment so nobody is spammed blindly.
+- Reminder history is visible on the row, and the faculty member's own dashboard shows an "Action required" banner for reminded papers.
+
 ## Proposed database schema
 
 Existing `papers` and `notifications` tables stay; new tables are added around them.
