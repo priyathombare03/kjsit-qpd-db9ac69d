@@ -18,6 +18,16 @@
 - **Forgot password** link on the login screen for every role: email entry -> reset email -> `/auth/reset` screen to set a new password. Reset uses the built-in auth email flow, so no passwords are ever handled by app code.
 - **Realtime notifications**: the bell in the header subscribes to live inserts on `notifications` instead of polling every 15 seconds, so approval, assignment, decision and reminder events appear immediately. A notifications panel lists them with read/unread state.
 
+## Email the DQC when a paper is finalized
+
+- When a faculty member finalizes a paper, the system resolves the DQC for that year level, creates the assignment, and immediately **emails that DQC** — no waiting for them to notice an inbox.
+- The email is branded (Somaiya logo, course, class/semester, set count, who submitted, due date) and contains a **Review and approve** button that deep-links straight to `/dqc/paper/<id>` for that specific paper.
+- Clicking the link opens the review screen; if they are not signed in they land on login and are returned to the same paper afterwards. Approve/Return still happens on that screen, so nothing is approved by clicking an email link alone — that keeps a stray forwarded email from approving a paper.
+- The in-app DQC queue and bell notification stay as a backup view, but the email is the primary trigger.
+- Reminder emails reuse the same mechanism: an overdue assignment can re-email the DQC (or the faculty member) with the same deep link, throttled by the existing reminder counters.
+- Setup note: sending real email needs an email sending domain verified for the project. I will scaffold the templates and the sender; you (or IT) add the DNS records once, then mails go out. Until then the app falls back to in-app notifications only.
+
+
 ## Submission reminders
 
 - The tracking dashboard flags any assignment past its due date with nothing submitted.
