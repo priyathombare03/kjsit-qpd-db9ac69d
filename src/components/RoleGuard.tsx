@@ -3,11 +3,12 @@ import { useEffect, type ReactNode } from "react";
 import { homeFor, useAuth, type Role } from "@/lib/auth";
 import { AppHeader } from "./AppHeader";
 
-export function RoleGuard({ role, children }: { role: Role; children: ReactNode }) {
+export function RoleGuard({ role, children }: { role: Role | Role[]; children: ReactNode }) {
+  const roles = Array.isArray(role) ? role : [role];
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  const allowed = !!user && user.status === "active" && user.roles.includes(role);
+  const allowed = !!user && user.status === "active" && roles.some((r) => user.roles.includes(r));
 
   useEffect(() => {
     if (loading) return;
@@ -15,9 +16,10 @@ export function RoleGuard({ role, children }: { role: Role; children: ReactNode 
       navigate({ to: "/", replace: true });
       return;
     }
-    if (!user.roles.includes(role)) {
+    if (!roles.some((r) => user.roles.includes(r))) {
       navigate({ to: homeFor(user), replace: true });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, user, role, navigate]);
 
   if (loading || !allowed) {
