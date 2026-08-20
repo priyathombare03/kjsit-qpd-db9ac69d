@@ -16,10 +16,22 @@ function tokenize(norm: string): Set<string> {
   return new Set(norm.split(" ").filter((t) => t.length > 2 && !STOP.has(t)));
 }
 
+/**
+ * Split a long, unbroken run of text (typical of PDF extraction) at inline
+ * question numbering such as " 12. ", " Q3) " or " (iv) ".
+ */
+function splitInlineNumbering(line: string): string[] {
+  if (line.length < 160) return [line];
+  return line
+    .replace(/\s(?=(?:[Qq]\s*\.?\s*)?\d{1,2}\s*[.)]\s+[A-Z])/g, "\n")
+    .split("\n");
+}
+
 /** Split raw question-bank text into candidate question statements. */
 export function parseQuestionBank(raw: string): BankItem[] {
   const lines = raw
     .split(/\r?\n/)
+    .flatMap(splitInlineNumbering)
     .map((l) =>
       l
         // strip leading numbering / bullets: "1.", "Q3)", "a)", "-", "•"
@@ -29,6 +41,7 @@ export function parseQuestionBank(raw: string): BankItem[] {
         .trim(),
     )
     .filter(Boolean);
+
 
   const seen = new Set<string>();
   const items: BankItem[] = [];
