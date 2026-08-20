@@ -397,7 +397,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_assigned_reviewer: { Args: { _paper_id: string }; Returns: boolean }
       my_department: { Args: never; Returns: string }
+      my_email: { Args: never; Returns: string }
       my_institution: { Args: never; Returns: string }
     }
     Enums: {
