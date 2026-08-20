@@ -28,7 +28,6 @@ export const Route = createFileRoute("/designer/paper/$id")({
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90";
-const btnGhost = "rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent";
 
 function DesignerPaper() {
   const { id } = Route.useParams();
