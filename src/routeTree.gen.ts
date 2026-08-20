@@ -20,6 +20,7 @@ import { Route as DesignerNewRouteImport } from './routes/designer/new'
 import { Route as DqcIndexRouteImport } from './routes/dqc/index'
 import { Route as HodIndexRouteImport } from './routes/hod/index'
 import { Route as CoordPaperIdRouteImport } from './routes/coord/paper.$id'
+import { Route as CoordPrintIdRouteImport } from './routes/coord/print.$id'
 import { Route as DesignerPaperIdRouteImport } from './routes/designer/paper.$id'
 import { Route as DqcPaperIdRouteImport } from './routes/dqc/paper.$id'
 
@@ -78,6 +79,11 @@ const CoordPaperIdRoute = CoordPaperIdRouteImport.update({
   path: '/coord/paper/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoordPrintIdRoute = CoordPrintIdRouteImport.update({
+  id: '/coord/print/$id',
+  path: '/coord/print/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DesignerPaperIdRoute = DesignerPaperIdRouteImport.update({
   id: '/designer/paper/$id',
   path: '/designer/paper/$id',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/dqc/': typeof DqcIndexRoute
   '/hod/': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/dqc': typeof DqcIndexRoute
   '/hod': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/dqc/': typeof DqcIndexRoute
   '/hod/': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/dqc/'
     | '/hod/'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/dqc'
     | '/hod'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/dqc/'
     | '/hod/'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   DqcIndexRoute: typeof DqcIndexRoute
   HodIndexRoute: typeof HodIndexRoute
   CoordPaperIdRoute: typeof CoordPaperIdRoute
+  CoordPrintIdRoute: typeof CoordPrintIdRoute
   DesignerPaperIdRoute: typeof DesignerPaperIdRoute
   DqcPaperIdRoute: typeof DqcPaperIdRoute
 }
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoordPaperIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/coord/print/$id': {
+      id: '/coord/print/$id'
+      path: '/coord/print/$id'
+      fullPath: '/coord/print/$id'
+      preLoaderRoute: typeof CoordPrintIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/designer/paper/$id': {
       id: '/designer/paper/$id'
       path: '/designer/paper/$id'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   DqcIndexRoute: DqcIndexRoute,
   HodIndexRoute: HodIndexRoute,
   CoordPaperIdRoute: CoordPaperIdRoute,
+  CoordPrintIdRoute: CoordPrintIdRoute,
   DesignerPaperIdRoute: DesignerPaperIdRoute,
   DqcPaperIdRoute: DqcPaperIdRoute,
 }
