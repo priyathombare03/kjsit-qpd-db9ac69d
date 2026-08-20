@@ -1,6 +1,13 @@
 import type React from "react";
 import logo from "@/assets/svv-logo.png";
-import { getPattern, paperInstruction, paperTime, type PatternSlot } from "@/lib/paper-pattern";
+import {
+  getPattern,
+  hasSubQColumn,
+  paperInstruction,
+  paperTime,
+  slotLabel,
+  type PatternSlot,
+} from "@/lib/paper-pattern";
 import type { GeneratedSet, PaperMeta } from "@/lib/paper-types";
 
 export type DiagramMap = Record<string, string>;
@@ -26,6 +33,7 @@ export function PaperRenderer({
   examView?: boolean;
 }) {
   const pattern = getPattern(meta.marks);
+  const showSubQ = hasSubQColumn(meta.marks);
   const dept = meta.department || "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE";
   const grouped = groupByQ(pattern);
 
@@ -41,6 +49,7 @@ export function PaperRenderer({
           </div>
           <div className="mt-2 text-[11pt]">Academic Year {meta.academicYear}</div>
           <div className="mt-1 text-[12pt] font-bold">{dept}</div>
+          <div className="mt-1 text-[11pt] font-semibold">Test {meta.testNumber ?? (meta.marks === 20 ? 1 : 2)}</div>
           {setLabel && <div className="text-brand mt-1 text-[10pt] font-semibold">{setLabel}</div>}
         </div>
       </div>
@@ -85,8 +94,8 @@ export function PaperRenderer({
       <table>
         <thead>
           <tr>
-            <th style={{ width: "8%" }}>Q. No.</th>
-            <th style={{ width: "8%" }}>Sub Q.</th>
+            <th style={{ width: showSubQ ? "8%" : "12%" }}>Question No.</th>
+            {showSubQ && <th style={{ width: "10%" }}>Sub Question No.</th>}
             <th>Statement of Question</th>
             <th style={{ width: "8%" }}>Marks</th>
             {!examView && <th style={{ width: "8%" }}>CO</th>}
@@ -98,6 +107,7 @@ export function PaperRenderer({
             <RenderGroup
               key={group.qNo}
               group={group}
+              marks={meta.marks}
               questions={set.questions}
               diagrams={diagrams}
               showAttachHint={showAttachHint}
@@ -107,6 +117,7 @@ export function PaperRenderer({
           ))}
         </tbody>
       </table>
+
 
       {!examView && <CourseOutcomesFooter meta={meta} />}
 
@@ -144,6 +155,7 @@ function groupByQ(pattern: PatternSlot[]): QGroup[] {
 
 function RenderGroup({
   group,
+  marks,
   questions,
   diagrams,
   showAttachHint,
@@ -151,20 +163,33 @@ function RenderGroup({
   examView,
 }: {
   group: QGroup;
+  marks: 20 | 30;
   questions: GeneratedSet["questions"];
   diagrams: DiagramMap;
   showAttachHint?: boolean | undefined;
   onAttachClick?: ((key: string) => void) | undefined;
   examView?: boolean | undefined;
 }) {
+  const showSubQ = hasSubQColumn(marks);
+  const colSpan = 2 + (showSubQ ? 1 : 0) + (examView ? 0 : 2);
   const rows: React.ReactElement[] = [];
   group.slots.forEach((slot, idx) => {
     const q = questions.find((x) => x.key === slot.key);
     const diag = diagrams[slot.key];
+    if (slot.isOr) {
+      rows.push(
+        <tr key={`${slot.key}-or`}>
+          <td>{slot.qNo}</td>
+          <td colSpan={colSpan} className="text-center font-bold">
+            OR
+          </td>
+        </tr>,
+      );
+    }
     rows.push(
       <tr key={slot.key}>
-        <td>{idx === 0 ? slot.qNo : ""}</td>
-        <td>{slot.subQ}</td>
+        <td>{showSubQ ? (idx === 0 || slot.isOr ? slot.qNo : "") : slotLabel(slot, marks)}</td>
+        {showSubQ && <td>{slot.subQ})</td>}
         <td>
           <div>{q?.text ?? ""}</div>
           {diag ? (
@@ -187,6 +212,7 @@ function RenderGroup({
   });
   return <>{rows}</>;
 }
+
 
 function CourseOutcomesFooter({ meta }: { meta: PaperMeta }) {
   const testNumber: 1 | 2 = meta.testNumber ?? (meta.marks === 20 ? 1 : 2);
