@@ -1,24 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { admin, callerProfile, callerRoles } from "@/lib/assignments.server";
 
 export type DqcCandidate = { id: string; email: string; fullName: string; openLoad: number };
-
-async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
-async function callerProfile(supabase: any, userId: string) {
-  const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (!data || data.status !== "active") throw new Error("Your account is not active.");
-  return data;
-}
-
-async function callerRoles(supabase: any, userId: string): Promise<string[]> {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  return (data ?? []).map((r: { role: string }) => r.role);
-}
-
 /** DQC members whose year scopes cover the requested level, in the caller's institution + department. */
 export const resolveDqcs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -52,7 +36,9 @@ export const resolveDqcs = createServerFn({ method: "POST" })
       .in("status", ["assigned", "in_review"]);
 
     const load = new Map<string, number>();
-    for (const row of open ?? []) load.set(row.assigned_to, (load.get(row.assigned_to) ?? 0) + 1);
+    for (const row of (open ?? []) as { assigned_to: string | null }[]) {
+      if (row.assigned_to) load.set(row.assigned_to, (load.get(row.assigned_to) ?? 0) + 1);
+    }
 
     return candidates
       .map((c: { id: string; email: string; full_name: string }) => ({
@@ -226,11 +212,11 @@ export const setUserRoles = createServerFn({ method: "POST" })
 
     await db.from("user_roles").delete().eq("user_id", data.userId);
     if (data.roles.length > 0) {
-      await db.from("user_roles").insert(data.roles.map((r) => ({ user_id: data.userId, role: r })));
+      await db.from("user_roles").insert(data.roles.map((r) => ({ user_id: data.userId, role: r as "hod" | "dqc" | "coord" | "designer" })));
     }
     await db.from("dqc_scopes").delete().eq("user_id", data.userId);
     if (data.roles.includes("dqc") && data.yearLevels.length > 0) {
-      await db.from("dqc_scopes").insert(data.yearLevels.map((y) => ({ user_id: data.userId, year_level: y })));
+      await db.from("dqc_scopes").insert(data.yearLevels.map((y) => ({ user_id: data.userId, year_level: y as "SY" | "TY" | "LY" })));
     }
     return { ok: true };
   });
