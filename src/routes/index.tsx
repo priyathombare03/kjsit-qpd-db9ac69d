@@ -78,7 +78,7 @@ function Login() {
             className="h-20 w-20 object-contain"
           />
         </div>
-        <h1 className="text-center text-xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="mt-3 text-center text-xl font-semibold tracking-tight">Sign in</h1>
 
 
         <form onSubmit={submit} className="mt-6 space-y-4">
