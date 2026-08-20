@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSessionUser, homeFor } from "@/lib/auth";
 import { listInstitutions, type Institution } from "@/lib/reference-db";
+import logo from "@/assets/svv-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
