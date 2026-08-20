@@ -71,11 +71,6 @@ function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="bg-card border-border w-full max-w-md rounded-xl border p-6 shadow-sm sm:p-8">
-        <Logo size={48} />
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight">Paper Path</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Question paper design, quality check and distribution for Somaiya Vidyavihar.
-        </p>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <fieldset>
