@@ -5,7 +5,7 @@ import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { fileToDataUrl } from "@/lib/extract";
 import { getPattern } from "@/lib/paper-pattern";
-import type { PaperRow } from "@/lib/paper-types";
+import { btLabel, type PaperRow } from "@/lib/paper-types";
 import { downloadPdf, downloadWord } from "@/lib/export";
 import { getPaper, notify, updatePaper } from "@/lib/papers-db";
 

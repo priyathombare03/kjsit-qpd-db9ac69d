@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { downloadPdf, downloadWord } from "@/lib/export";
-import type { PaperRow } from "@/lib/paper-types";
+import { btLabel, type PaperRow } from "@/lib/paper-types";
 import { getPaper } from "@/lib/papers-db";
 
 export const Route = createFileRoute("/coord/paper/$id")({
