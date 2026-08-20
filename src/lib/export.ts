@@ -1,5 +1,5 @@
 import logoUrl from "@/assets/svv-logo.png";
-import { getPattern, paperInstruction, paperTime } from "./paper-pattern";
+import { getPattern, hasSubQColumn, paperInstruction, paperTime, slotLabel } from "./paper-pattern";
 import type { GeneratedSet, PaperMeta } from "./paper-types";
 
 type ExportArgs = {
