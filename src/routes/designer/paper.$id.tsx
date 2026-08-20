@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
+import { diagramKey, diagramsForSet } from "@/lib/diagrams";
+import { downloadPdf, downloadWord } from "@/lib/export";
 import { fileToDataUrl } from "@/lib/extract";
-import { getPattern } from "@/lib/paper-pattern";
-import { btLabel, type PaperRow } from "@/lib/paper-types";
+import { getPattern, slotLabel } from "@/lib/paper-pattern";
+import { btLabel, type GeneratedSet, type PaperRow } from "@/lib/paper-types";
 import { getPaper, updatePaper } from "@/lib/papers-db";
 import { resolveDqcs, submitPaperForReview } from "@/lib/assignments.functions";
 import { useServerFn } from "@tanstack/react-start";
@@ -14,7 +16,7 @@ export const Route = createFileRoute("/designer/paper/$id")({
   head: () => ({
     meta: [
       { title: "Edit Question Paper — Paper Path" },
-      { name: "description", content: "Pick a set, attach diagrams and send the question paper to the DQC." },
+      { name: "description", content: "Pick a set, edit or reframe questions, attach diagrams and send the paper to the DQC." },
       { property: "og:title", content: "Edit Question Paper — Paper Path" },
       { property: "og:description", content: "Finalize one of three generated sets and forward it for quality check." },
     ],
@@ -28,6 +30,8 @@ export const Route = createFileRoute("/designer/paper/$id")({
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90";
+const btnGhost =
+  "rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent disabled:opacity-50";
 
 function DesignerPaper() {
   const { id } = Route.useParams();
@@ -36,6 +40,7 @@ function DesignerPaper() {
   const [sending, setSending] = useState(false);
   const [paper, setPaper] = useState<PaperRow | null>(null);
   const [active, setActive] = useState(0);
+  const [editing, setEditing] = useState(false);
   const [attachKey, setAttachKey] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -55,7 +60,36 @@ function DesignerPaper() {
   const set = paper.sets[active];
   if (!set) return <p className="text-muted-foreground p-8 text-sm">This paper has no generated sets.</p>;
 
+  const diagrams = diagramsForSet(paper.diagrams, active);
   const refresh = async () => setPaper(await getPaper(id));
+
+  const saveSets = async (sets: GeneratedSet[]) => {
+    await updatePaper(id, { sets: sets as never });
+    await refresh();
+  };
+
+  const editQuestion = async (key: string, text: string) => {
+    const sets = paper.sets.map((s, i) =>
+      i === active ? { ...s, questions: s.questions.map((q) => (q.key === key ? { ...q, text } : q)) } : s,
+    );
+    await saveSets(sets);
+  };
+
+  /** Swap this slot with the next distinct question available for the same slot in the other sets. */
+  const reframeQuestion = async (key: string) => {
+    const pool = paper.sets
+      .map((s) => s.questions.find((q) => q.key === key)?.text ?? "")
+      .filter(Boolean);
+    const current = set.questions.find((q) => q.key === key)?.text ?? "";
+    const options = pool.filter((t) => t !== current);
+    if (options.length === 0) {
+      toast.error("No alternative question is available in the bank for this slot.");
+      return;
+    }
+    const next = options[0]!;
+    await editQuestion(key, next);
+    toast.success("Question reframed from another set.");
+  };
 
   const finalize = async () => {
     await updatePaper(id, { selected_set_index: active, status: "draft", dqc_note: null });
@@ -100,15 +134,23 @@ function DesignerPaper() {
   const onPickImage = async (file?: File) => {
     if (!file || !attachKey) return;
     const dataUrl = await fileToDataUrl(file);
-    const diagrams = { ...paper.diagrams, [attachKey]: dataUrl };
-    await updatePaper(id, { diagrams });
+    const next = { ...paper.diagrams, [diagramKey(active, attachKey)]: dataUrl };
+    await updatePaper(id, { diagrams: next });
     setAttachKey(null);
     await refresh();
-    toast.success("Diagram attached.");
+    toast.success(`Diagram attached to Set ${active + 1}.`);
+  };
+
+  const removeDiagram = async (key: string) => {
+    const next = { ...paper.diagrams };
+    delete next[diagramKey(active, key)];
+    if (active === 0) delete next[key];
+    await updatePaper(id, { diagrams: next });
+    await refresh();
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-8">
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{paper.meta.courseName}</h1>
@@ -117,9 +159,12 @@ function DesignerPaper() {
           </p>
         </div>
         <div className="no-print flex flex-wrap gap-2">
-          <span className="text-muted-foreground self-center text-xs">
-            Printing and downloading happen in the exam coordinator login after DQC approval.
-          </span>
+          <button className={btnGhost} onClick={() => void downloadPdf({ meta: paper.meta, set, diagrams })}>
+            Download PDF
+          </button>
+          <button className={btnGhost} onClick={() => void downloadWord({ meta: paper.meta, set, diagrams })}>
+            Download Word
+          </button>
           <button className={btn} disabled={!finalized || readOnly || sending} onClick={sendToDqc}>
             {sending ? "Sending…" : "Send to DQC"}
           </button>
@@ -151,16 +196,34 @@ function DesignerPaper() {
         <button className={btn} onClick={finalize} disabled={readOnly || paper.selected_set_index === active}>
           {paper.selected_set_index === active ? "This set is finalized" : "Finalize this set"}
         </button>
+        <button className={btnGhost} onClick={() => setEditing((v) => !v)} disabled={readOnly}>
+          {editing ? "Done editing" : "Edit questions"}
+        </button>
         <span className="text-muted-foreground text-xs">
-          Click “Attach diagram here if needed” under any question to add an image.
+          Diagrams are stored per set — attaching one to Set {active + 1} does not affect the other sets.
         </span>
       </div>
+
+      {editing && !readOnly && (
+        <QuestionEditor
+          paper={paper}
+          set={set}
+          diagrams={diagrams}
+          onEdit={editQuestion}
+          onReframe={reframeQuestion}
+          onAttach={(key) => {
+            setAttachKey(key);
+            fileRef.current?.click();
+          }}
+          onRemoveDiagram={removeDiagram}
+        />
+      )}
 
       <div className="mt-6">
         <PaperRenderer
           meta={paper.meta}
           set={set}
-          diagrams={paper.diagrams}
+          diagrams={diagrams}
           signatureUrl={paper.dqc_signature}
           setLabel={`Set ${active + 1} — ${btLabel[set.bt]}`}
           showAttachHint={!readOnly}
@@ -181,15 +244,60 @@ function DesignerPaper() {
           e.target.value = "";
         }}
       />
-
-      {paper.diagrams && Object.keys(paper.diagrams).length > 0 && (
-        <div className="no-print text-muted-foreground mt-4 text-xs">
-          Diagrams attached to: {getPattern(paper.meta.marks)
-            .filter((s) => paper.diagrams[s.key])
-            .map((s) => `${s.qNo}(${s.subQ})`)
-            .join(", ")}
-        </div>
-      )}
     </main>
+  );
+}
+
+function QuestionEditor({
+  paper,
+  set,
+  diagrams,
+  onEdit,
+  onReframe,
+  onAttach,
+  onRemoveDiagram,
+}: {
+  paper: PaperRow;
+  set: GeneratedSet;
+  diagrams: Record<string, string>;
+  onEdit: (key: string, text: string) => Promise<void>;
+  onReframe: (key: string) => Promise<void>;
+  onAttach: (key: string) => void;
+  onRemoveDiagram: (key: string) => Promise<void>;
+}) {
+  return (
+    <div className="no-print border-border bg-card mt-4 space-y-4 rounded-xl border p-4">
+      {getPattern(paper.meta.marks).map((slot) => {
+        const q = set.questions.find((x) => x.key === slot.key);
+        return (
+          <div key={slot.key} className="border-border rounded-lg border p-3">
+            <div className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
+              {slotLabel(slot, paper.meta.marks)} · {slot.marks} marks · {q?.bloom ?? slot.bloom} · {q?.co ?? "—"}
+            </div>
+            <textarea
+              className="border-border bg-background focus:ring-brand/40 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
+              rows={3}
+              defaultValue={q?.text ?? ""}
+              onBlur={(e) => {
+                if (e.target.value !== (q?.text ?? "")) void onEdit(slot.key, e.target.value);
+              }}
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button className={btnGhost} onClick={() => void onReframe(slot.key)}>
+                Reframe question
+              </button>
+              <button className={btnGhost} onClick={() => onAttach(slot.key)}>
+                {diagrams[slot.key] ? "Replace diagram" : "Attach diagram"}
+              </button>
+              {diagrams[slot.key] && (
+                <button className={btnGhost} onClick={() => void onRemoveDiagram(slot.key)}>
+                  Remove diagram
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
