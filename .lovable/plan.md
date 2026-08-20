@@ -104,6 +104,7 @@ This is why assignment is its own table rather than a column on `papers`: multip
 - Password reset uses the platform's built-in reset email plus a `/auth/reset` page; if you want the reset mail branded with the Somaiya identity, that needs a verified sending domain — tell me and I will wire it.
 - Realtime notifications use a Supabase realtime subscription on `notifications` filtered to the signed-in user's email, replacing the 15-second polling in `AppHeader`.
 - Reminders are sent through a server function that verifies the caller is a coordinator or HOD, writes the notification, and increments the reminder counters.
+- The DQC email is a React Email template sent from the same server function that finalizes the paper, right after the assignment row is written, with an idempotency key per assignment so retries do not duplicate mail. Send failures are logged and never block finalization — the in-app assignment still exists.
 
 ## Mobile / installable app (PWA)
 
