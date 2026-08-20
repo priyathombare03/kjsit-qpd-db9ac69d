@@ -294,3 +294,69 @@ export const listTracking = createServerFn({ method: "POST" })
         assignedToName: r.assigned_to ? (nameMap.get(r.assigned_to) ?? "—") : "Unassigned",
       }));
   });
+
+/** DQC approves or returns a paper; updates the assignment row and notifies faculty / coordinator. */
+export const decidePaper = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { paperId: string; approve: boolean; note: string | null }) => input)
+  .handler(async ({ data, context }) => {
+    const me = await callerProfile(context.supabase, context.userId);
+    const roles = await callerRoles(context.supabase, context.userId);
+    if (!roles.includes("dqc")) throw new Error("Only a DQC member can decide on a paper.");
+    const db = await admin();
+
+    const { data: assignment } = await db
+      .from("paper_assignments")
+      .select("*")
+      .eq("paper_id", data.paperId)
+      .eq("assigned_to", context.userId)
+      .in("status", ["assigned", "in_review"])
+      .maybeSingle();
+    if (!assignment) throw new Error("This paper is not assigned to you.");
+
+    const now = new Date().toISOString();
+    await db
+      .from("paper_assignments")
+      .update({ status: data.approve ? "approved" : "returned", decided_at: now, note: data.note })
+      .eq("id", assignment.id);
+
+    await db
+      .from("papers")
+      .update({
+        status: data.approve ? "approved" : "not_approved",
+        dqc_note: data.approve ? null : data.note,
+      })
+      .eq("id", data.paperId);
+
+    const { data: paper } = await db.from("papers").select("meta, created_by").eq("id", data.paperId).maybeSingle();
+    const course = (paper?.meta as { courseName?: string })?.courseName ?? "a question paper";
+
+    if (data.approve) {
+      const { data: coordRoles } = await db.from("user_roles").select("user_id").eq("role", "coord");
+      const coordIds = (coordRoles ?? []).map((r: { user_id: string }) => r.user_id);
+      const { data: coords } = coordIds.length
+        ? await db.from("profiles").select("email").in("id", coordIds).eq("institution_id", me.institution_id)
+        : { data: [] as { email: string }[] };
+      for (const c of coords ?? []) {
+        await db.from("notifications").insert({
+          recipient_email: c.email,
+          paper_id: data.paperId,
+          type: "decision",
+          message: `Approved paper ready to print: "${course}".`,
+        });
+      }
+    }
+
+    if (paper?.created_by) {
+      await db.from("notifications").insert({
+        recipient_email: paper.created_by,
+        paper_id: data.paperId,
+        type: "decision",
+        message: data.approve
+          ? `Your paper "${course}" was approved by the DQC.`
+          : `Your paper "${course}" was returned by the DQC: ${data.note ?? "no note"}`,
+      });
+    }
+
+    return { ok: true };
+  });
