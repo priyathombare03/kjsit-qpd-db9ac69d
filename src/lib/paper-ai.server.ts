@@ -1,5 +1,7 @@
 import { getPattern, type Bloom } from "./paper-pattern";
 import type { GeneratedSet, PaperMeta } from "./paper-types";
+import { matchInBank, parseQuestionBank, pickFromBank } from "./question-bank";
+
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.5-flash";
@@ -97,21 +99,42 @@ export async function generateSets(input: GenerateInput): Promise<GenerateOutput
   const parsed = parseJson(String(content));
 
   const pattern = getPattern(input.meta.marks);
-  const sets: GeneratedSet[] = (parsed.sets ?? []).slice(0, 3).map((s: any, i: number) => ({
-    bt: (["H", "M", "H"] as const)[i] ?? "M",
-    questions: pattern.map((slot) => {
-      const found = (s.questions ?? []).find((q: any) => q.key === slot.key);
-      return {
-        key: slot.key,
-        text: String(found?.text ?? "").trim() || "[No matching question found in the uploaded question bank]",
-        bloom: (found?.bloom as Bloom) ?? slot.bloom,
-        co: String(found?.co ?? "CO1"),
-        module: String(found?.module ?? ""),
-      };
-    }),
-  }));
+  const bank = parseQuestionBank(input.questionBankText);
+  if (bank.length === 0) throw new Error("No usable questions could be read from the uploaded question bank.");
+
+  const used = new Set<string>();
+  const cursor = { i: 0 };
+
+  const rawSets: any[] = (parsed.sets ?? []).slice(0, 3);
+  const setCount = Math.max(rawSets.length, 1);
+
+  const sets: GeneratedSet[] = Array.from({ length: setCount }, (_, i) => {
+    const s = rawSets[i] ?? {};
+    return {
+      bt: (["H", "M", "H"] as const)[i] ?? "M",
+      questions: pattern.map((slot) => {
+        const found = (s.questions ?? []).find((q: any) => q.key === slot.key);
+        const proposed = String(found?.text ?? "").trim();
+
+        // Strict hallucination filter: the text must really exist in the parsed bank.
+        const matched = proposed ? matchInBank(bank, proposed) : null;
+        // Graceful downgrade: any unused bank question, Bloom requirement ignored.
+        const item = matched ?? pickFromBank(bank, used, cursor);
+        if (matched) used.add(matched.norm);
+
+        return {
+          key: slot.key,
+          text: item?.text ?? "[No matching question found in the uploaded question bank]",
+          bloom: (matched ? ((found?.bloom as Bloom) ?? slot.bloom) : slot.bloom) as Bloom,
+          co: String(found?.co ?? "CO1"),
+          module: String(found?.module ?? ""),
+        };
+      }),
+    };
+  });
 
   if (sets.length === 0) throw new Error("The AI did not return any question sets. Please try again.");
+
 
   return { sets, courseOutcomes: (parsed.courseOutcomes ?? {}) as Record<string, string> };
 }
