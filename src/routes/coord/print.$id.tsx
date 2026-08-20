@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { diagramsForSet } from "@/lib/diagrams";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import type { PaperRow } from "@/lib/paper-types";
@@ -45,11 +46,12 @@ function PrintView() {
     return <p className="text-destructive p-8 text-sm">This paper is not DQC-approved yet, so it cannot be printed.</p>;
   }
   const set = paper.sets[paper.selected_set_index ?? 0];
+  const diagrams = diagramsForSet(paper?.diagrams, paper?.selected_set_index ?? 0);
   if (!set) return <p className="text-muted-foreground p-8 text-sm">This paper has no finalized set.</p>;
 
   return (
     <main className="py-8">
-      <PaperRenderer meta={paper.meta} set={set} diagrams={paper.diagrams} examView />
+      <PaperRenderer meta={paper.meta} set={set} diagrams={diagrams} examView />
     </main>
   );
 }

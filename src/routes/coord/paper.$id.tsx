@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { diagramsForSet } from "@/lib/diagrams";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { downloadPdf, downloadWord } from "@/lib/export";
@@ -45,6 +46,7 @@ function CoordPaper() {
     );
   }
   const set = paper.sets[paper.selected_set_index ?? 0];
+  const diagrams = diagramsForSet(paper?.diagrams, paper?.selected_set_index ?? 0);
   if (!set) return <p className="text-muted-foreground p-8 text-sm">This paper has no finalized set.</p>;
 
   return (
@@ -69,7 +71,7 @@ function CoordPaper() {
               downloadPdf({
                 meta: paper.meta,
                 set,
-                diagrams: paper.diagrams,
+                diagrams,
                 signature: paper.dqc_signature,
                 includeCourseOutcomes: false,
               })
@@ -89,7 +91,7 @@ function CoordPaper() {
         <PaperRenderer
           meta={paper.meta}
           set={set}
-          diagrams={paper.diagrams}
+          diagrams={diagrams}
           signatureUrl={paper.dqc_signature}
           setLabel={`Final paper — ${btLabel[set.bt]}`}
         />
