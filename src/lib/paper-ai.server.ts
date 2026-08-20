@@ -31,7 +31,7 @@ RULES (strict):
 1. Every question MUST be derived ONLY from the QUESTION BANK text below. Do not invent new questions; you may lightly rephrase a bank question so it fits the marks allotted.
 2. Use ONLY Bloom levels Remember, Understand and Apply, matching the level fixed for each slot.
 3. Distribute questions across syllabus modules proportionally to the module hours/weightage inferred from the syllabus.
-4. Produce exactly THREE sets: one "Easy", one "Medium" and one "Hard". The three sets must not repeat the same question.
+4. Produce exactly THREE sets tagged by BT (Bloom's Taxonomy) level: set 1 "H" (high BT emphasis), set 2 "M" (medium BT emphasis), set 3 "H". The three sets must not repeat the same question.
 5. Fill EVERY slot listed below, using the exact slot key.
 6. Map each question to a course outcome code (CO1..CO6) inferred from the syllabus.
 7. Also extract the course outcome statements (CO1..CO6) found in the syllabus.
@@ -50,7 +50,7 @@ ${input.questionBankText.slice(0, 30000)}
 """
 
 Reply with JSON only, in this shape:
-{"courseOutcomes":{"CO1":"...","CO2":"..."},"sets":[{"difficulty":"Easy","questions":[{"key":"q1a","text":"...","bloom":"Remember","co":"CO1","module":"Module 1"}]}]}`;
+{"courseOutcomes":{"CO1":"...","CO2":"..."},"sets":[{"bt":"H","questions":[{"key":"q1a","text":"...","bloom":"Remember","co":"CO1","module":"Module 1"}]}]}`;
 }
 
 function parseJson(raw: string): any {
@@ -98,7 +98,7 @@ export async function generateSets(input: GenerateInput): Promise<GenerateOutput
 
   const pattern = getPattern(input.meta.marks);
   const sets: GeneratedSet[] = (parsed.sets ?? []).slice(0, 3).map((s: any, i: number) => ({
-    difficulty: (["Easy", "Medium", "Hard"] as const)[i] ?? "Medium",
+    bt: (["H", "M", "H"] as const)[i] ?? "M",
     questions: pattern.map((slot) => {
       const found = (s.questions ?? []).find((q: any) => q.key === slot.key);
       return {

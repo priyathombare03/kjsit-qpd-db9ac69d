@@ -5,8 +5,10 @@ import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { fileToDataUrl } from "@/lib/extract";
 import { getPattern } from "@/lib/paper-pattern";
-import type { PaperRow } from "@/lib/paper-types";
-import { getPaper, notify, updatePaper } from "@/lib/papers-db";
+import { btLabel, type PaperRow } from "@/lib/paper-types";
+import { getPaper, updatePaper } from "@/lib/papers-db";
+import { decidePaper } from "@/lib/assignments.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/dqc/paper/$id")({
   head: () => ({
@@ -30,6 +32,7 @@ const btnGhost = "rounded-lg border border-border px-4 py-2 text-sm font-medium 
 function DqcPaper() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const decide = useServerFn(decidePaper);
   const [paper, setPaper] = useState<PaperRow | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -64,19 +67,25 @@ function DqcPaper() {
   const refresh = async () => setPaper(await getPaper(id));
 
   const approve = async () => {
-    await updatePaper(id, { status: "approved", dqc_note: null });
-    await notify("examcoord@somaiya.edu", id, `Approved paper ready: ${paper.meta.courseName}`);
-    toast.success("Paper approved and forwarded to the exam coordinator.");
-    navigate({ to: "/dqc" });
+    try {
+      await decide({ data: { paperId: id, approve: true, note: null } });
+      toast.success("Paper approved and forwarded to the exam coordinator.");
+      navigate({ to: "/dqc" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not approve the paper.");
+    }
   };
 
   const reject = async () => {
     const note = window.prompt("Why is this paper not approved?");
     if (!note) return;
-    await updatePaper(id, { status: "not_approved", dqc_note: note });
-    await notify(paper.created_by, id, `Paper returned by DQC: ${note}`);
-    toast.success("Paper returned to the designer.");
-    navigate({ to: "/dqc" });
+    try {
+      await decide({ data: { paperId: id, approve: false, note } });
+      toast.success("Paper returned to the designer.");
+      navigate({ to: "/dqc" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not return the paper.");
+    }
   };
 
   const addSignature = async (file?: File) => {
@@ -126,7 +135,7 @@ function DqcPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Selected set — ${set.difficulty}`}
+          setLabel={`Selected set — ${btLabel[set.bt]}`}
         />
       </div>
 

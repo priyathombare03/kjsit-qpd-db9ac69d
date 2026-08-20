@@ -1,12 +1,30 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { GeneratedSet, PaperMeta, PaperRow, PaperStatus } from "./paper-types";
+import type { YearLevel } from "./reference-db";
 
 const TABLE = "papers";
+
+export type NotificationRow = {
+  id: string;
+  recipient_email: string;
+  paper_id: string | null;
+  message: string;
+  type: string;
+  read: boolean;
+  created_at: string;
+};
 
 export async function listPapers(status?: PaperStatus[]): Promise<PaperRow[]> {
   let query = supabase.from(TABLE).select("*").order("created_at", { ascending: false });
   if (status?.length) query = query.in("status", status);
   const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as unknown as PaperRow[];
+}
+
+export async function listPapersByIds(ids: string[]): Promise<PaperRow[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.from(TABLE).select("*").in("id", ids).order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as PaperRow[];
 }
@@ -22,6 +40,11 @@ export async function createPaper(args: {
   meta: PaperMeta;
   sets: GeneratedSet[];
   createdBy: string;
+  createdById: string;
+  institutionId: string | null;
+  yearLevel: YearLevel | null;
+  academicYearId: string | null;
+  semesterId: string | null;
 }): Promise<PaperRow> {
   const { data, error } = await supabase
     .from(TABLE)
@@ -29,6 +52,11 @@ export async function createPaper(args: {
       meta: args.meta as never,
       sets: args.sets as never,
       created_by: args.createdBy,
+      created_by_id: args.createdById,
+      institution_id: args.institutionId,
+      year_level: args.yearLevel,
+      academic_year_id: args.academicYearId,
+      semester_id: args.semesterId,
       status: "draft",
     })
     .select()
@@ -42,11 +70,22 @@ export async function updatePaper(id: string, patch: Record<string, unknown>): P
   if (error) throw error;
 }
 
-export async function notify(recipientEmail: string, paperId: string, message: string) {
+export async function notify(recipientEmail: string, paperId: string | null, message: string, type = "assignment") {
   const { error } = await supabase
     .from("notifications")
-    .insert({ recipient_email: recipientEmail, paper_id: paperId, message });
+    .insert({ recipient_email: recipientEmail, paper_id: paperId, message, type });
   if (error) throw error;
+}
+
+export async function listNotifications(email: string): Promise<NotificationRow[]> {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("recipient_email", email)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) return [];
+  return (data ?? []) as NotificationRow[];
 }
 
 export async function unreadCount(email: string): Promise<number> {

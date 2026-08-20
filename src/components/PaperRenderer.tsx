@@ -13,6 +13,7 @@ export function PaperRenderer({
   showAttachHint = false,
   setLabel,
   onAttachClick,
+  examView = false,
 }: {
   meta: PaperMeta;
   set: GeneratedSet;
@@ -21,6 +22,8 @@ export function PaperRenderer({
   showAttachHint?: boolean;
   setLabel?: string;
   onAttachClick?: (key: string) => void;
+  /** Exam-facing copy: hides the CO column and the Course Outcomes footer. */
+  examView?: boolean;
 }) {
   const pattern = getPattern(meta.marks);
   const dept = meta.department || "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE";
@@ -86,8 +89,8 @@ export function PaperRenderer({
             <th style={{ width: "8%" }}>Sub Q.</th>
             <th>Statement of Question</th>
             <th style={{ width: "8%" }}>Marks</th>
-            <th style={{ width: "8%" }}>CO</th>
-            <th style={{ width: "10%" }}>BT Level</th>
+            {!examView && <th style={{ width: "8%" }}>CO</th>}
+            {!examView && <th style={{ width: "10%" }}>BT Level</th>}
           </tr>
         </thead>
         <tbody>
@@ -99,12 +102,13 @@ export function PaperRenderer({
               diagrams={diagrams}
               showAttachHint={showAttachHint}
               onAttachClick={onAttachClick}
+              examView={examView}
             />
           ))}
         </tbody>
       </table>
 
-      <CourseOutcomesFooter meta={meta} />
+      {!examView && <CourseOutcomesFooter meta={meta} />}
 
       <div className="mt-8 flex items-end justify-between text-[11pt]">
         <div>
@@ -144,12 +148,14 @@ function RenderGroup({
   diagrams,
   showAttachHint,
   onAttachClick,
+  examView,
 }: {
   group: QGroup;
   questions: GeneratedSet["questions"];
   diagrams: DiagramMap;
   showAttachHint?: boolean | undefined;
   onAttachClick?: ((key: string) => void) | undefined;
+  examView?: boolean | undefined;
 }) {
   const rows: React.ReactElement[] = [];
   group.slots.forEach((slot, idx) => {
@@ -174,8 +180,8 @@ function RenderGroup({
           ) : null}
         </td>
         <td className="text-center">{slot.marks}</td>
-        <td className="text-center">{q?.co ?? ""}</td>
-        <td className="text-center">{q?.bloom ?? slot.bloom}</td>
+        {!examView && <td className="text-center">{q?.co ?? ""}</td>}
+        {!examView && <td className="text-center">{q?.bloom ?? slot.bloom}</td>}
       </tr>,
     );
   });

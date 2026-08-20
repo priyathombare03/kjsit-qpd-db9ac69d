@@ -1,9 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RoleGuard } from "@/components/RoleGuard";
-import { readUser } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
+import {
+  listAcademicYears,
+  listSemesters,
+  YEAR_LEVEL_LABEL,
+  type AcademicYear,
+  type Semester,
+  type YearLevel,
+} from "@/lib/reference-db";
 import { extractText } from "@/lib/extract";
 import { generatePaper } from "@/lib/paper.functions";
 import type { PaperMeta } from "@/lib/paper-types";
@@ -18,7 +26,7 @@ export const Route = createFileRoute("/designer/new")({
         content: "Upload the syllabus and question bank to generate three AI question paper sets in the KJSIT format.",
       },
       { property: "og:title", content: "Generate Question Paper — Paper Path" },
-      { property: "og:description", content: "AI generation of Easy, Medium and Hard question paper sets." },
+      { property: "og:description", content: "AI generation of three question paper sets tagged by Bloom Taxonomy level." },
     ],
   }),
   component: () => (
@@ -34,6 +42,9 @@ const inputClass =
 function NewPaper() {
   const navigate = useNavigate();
   const generate = useServerFn(generatePaper);
+  const { user } = useAuth();
+  const [years, setYears] = useState<AcademicYear[]>([]);
+  const [semesters, setSemesters] = useState<Semester[]>([]);
   const [busy, setBusy] = useState(false);
   const [syllabus, setSyllabus] = useState<File | null>(null);
   const [bank, setBank] = useState<File | null>(null);
@@ -42,13 +53,41 @@ function NewPaper() {
     courseName: "",
     courseCode: "",
     className: "TY B.Tech",
-    academicYear: "2026-27",
-    semester: "V",
+    academicYearId: "",
+    yearLevel: "TY" as YearLevel,
+    semesterId: "",
     marks: 20 as 20 | 30,
     department: "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE",
   });
 
   const set = (k: keyof typeof form, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    listAcademicYears()
+      .then((rows) => {
+        setYears(rows);
+        setForm((f) => ({
+          ...f,
+          academicYearId: f.academicYearId || (rows.find((r) => r.is_active)?.id ?? rows[0]?.id ?? ""),
+        }));
+      })
+      .catch(() => setYears([]));
+  }, []);
+
+  useEffect(() => {
+    if (!form.academicYearId) return;
+    listSemesters(form.academicYearId)
+      .then((rows) => {
+        setSemesters(rows);
+        setForm((f) => {
+          const valid = rows.filter((r) => r.year_level === f.yearLevel);
+          return { ...f, semesterId: valid.some((v) => v.id === f.semesterId) ? f.semesterId : (valid[0]?.id ?? "") };
+        });
+      })
+      .catch(() => setSemesters([]));
+  }, [form.academicYearId, form.yearLevel]);
+
+  const visibleSemesters = semesters.filter((s) => s.year_level === form.yearLevel);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,12 +100,15 @@ function NewPaper() {
       const [syllabusText, questionBankText] = await Promise.all([extractText(syllabus), extractText(bank)]);
       if (!questionBankText.trim()) throw new Error("No readable text found in the question bank file.");
 
+      const academicYearLabel = years.find((y) => y.id === form.academicYearId)?.label ?? "";
+      const semesterLabel = semesters.find((s) => s.id === form.semesterId)?.label ?? "";
+
       const meta: PaperMeta = {
         courseName: form.courseName,
         courseCode: form.courseCode,
         className: form.className,
-        semester: form.semester,
-        academicYear: form.academicYear,
+        semester: semesterLabel,
+        academicYear: academicYearLabel,
         date: form.date,
         marks: form.marks,
         department: form.department,
@@ -80,7 +122,12 @@ function NewPaper() {
       const paper = await createPaper({
         meta: { ...meta, courseOutcomes: result.courseOutcomes },
         sets: result.sets,
-        createdBy: readUser()?.email ?? "designer@somaiya.edu",
+        createdBy: user?.email ?? "",
+        createdById: user?.id ?? "",
+        institutionId: user?.institutionId ?? null,
+        yearLevel: form.yearLevel,
+        academicYearId: form.academicYearId,
+        semesterId: form.semesterId || null,
       });
 
       toast.success("Three question paper sets generated.");
@@ -114,10 +161,36 @@ function NewPaper() {
             <input className={inputClass} value={form.className} onChange={(e) => set("className", e.target.value)} required />
           </Field>
           <Field label="Academic year">
-            <input className={inputClass} value={form.academicYear} onChange={(e) => set("academicYear", e.target.value)} required />
+            <select
+              className={inputClass}
+              value={form.academicYearId}
+              onChange={(e) => set("academicYearId", e.target.value)}
+              required
+            >
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Year level (routes to DQC)">
+            <select className={inputClass} value={form.yearLevel} onChange={(e) => set("yearLevel", e.target.value)}>
+              {(Object.keys(YEAR_LEVEL_LABEL) as YearLevel[]).map((y) => (
+                <option key={y} value={y}>
+                  {YEAR_LEVEL_LABEL[y]}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Semester">
-            <input className={inputClass} value={form.semester} onChange={(e) => set("semester", e.target.value)} required />
+            <select className={inputClass} value={form.semesterId} onChange={(e) => set("semesterId", e.target.value)} required>
+              {visibleSemesters.map((s) => (
+                <option key={s.id} value={s.id}>
+                  Semester {s.label}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Marks">
             <select

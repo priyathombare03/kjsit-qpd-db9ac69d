@@ -9,7 +9,7 @@ export type GeneratedQuestion = {
 };
 
 export type GeneratedSet = {
-  difficulty: "Easy" | "Medium" | "Hard";
+  bt: "H" | "M";
   questions: GeneratedQuestion[];
 };
 
@@ -26,6 +26,10 @@ export type PaperMeta = {
   courseOutcomes?: Record<string, string>;
 };
 
+export type BtLevel = "H" | "M";
+
+export const btLabel: Record<BtLevel, string> = { H: "BT High", M: "BT Medium" };
+
 export type PaperStatus = "draft" | "sent_to_dqc" | "approved" | "not_approved";
 
 export type PaperRow = {
@@ -38,6 +42,11 @@ export type PaperRow = {
   dqc_note: string | null;
   dqc_signature: string | null;
   created_by: string;
+  created_by_id: string | null;
+  institution_id: string | null;
+  year_level: "SY" | "TY" | "LY" | null;
+  academic_year_id: string | null;
+  semester_id: string | null;
   created_at: string;
   updated_at: string;
 };

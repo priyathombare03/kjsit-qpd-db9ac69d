@@ -5,9 +5,10 @@ import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { fileToDataUrl } from "@/lib/extract";
 import { getPattern } from "@/lib/paper-pattern";
-import type { PaperRow } from "@/lib/paper-types";
-import { downloadPdf, downloadWord } from "@/lib/export";
-import { getPaper, notify, updatePaper } from "@/lib/papers-db";
+import { btLabel, type PaperRow } from "@/lib/paper-types";
+import { getPaper, updatePaper } from "@/lib/papers-db";
+import { resolveDqcs, submitPaperForReview } from "@/lib/assignments.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/designer/paper/$id")({
   head: () => ({
@@ -27,10 +28,12 @@ export const Route = createFileRoute("/designer/paper/$id")({
 
 const btn =
   "rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90";
-const btnGhost = "rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-accent";
 
 function DesignerPaper() {
   const { id } = Route.useParams();
+  const resolve = useServerFn(resolveDqcs);
+  const submit = useServerFn(submitPaperForReview);
+  const [sending, setSending] = useState(false);
   const [paper, setPaper] = useState<PaperRow | null>(null);
   const [active, setActive] = useState(0);
   const [attachKey, setAttachKey] = useState<string | null>(null);
@@ -61,10 +64,37 @@ function DesignerPaper() {
   };
 
   const sendToDqc = async () => {
-    await updatePaper(id, { status: "sent_to_dqc" });
-    await notify("dqc@somaiya.edu", id, `New paper for review: ${paper.meta.courseName}`);
-    await refresh();
-    toast.success("Paper sent to DQC.");
+    if (!paper.year_level) {
+      toast.error("This paper has no year level. Re-create it with an academic year and semester selected.");
+      return;
+    }
+    setSending(true);
+    try {
+      const candidates = await resolve({ data: { yearLevel: paper.year_level } });
+      if (candidates.length === 0) {
+        toast.error(`No DQC member is configured for ${paper.year_level}. Ask your HOD to assign one.`);
+        return;
+      }
+      const target = candidates[0]!;
+      const due = new Date();
+      due.setDate(due.getDate() + 5);
+      await submit({
+        data: {
+          paperId: id,
+          yearLevel: paper.year_level,
+          academicYearId: paper.academic_year_id,
+          semesterId: paper.semester_id,
+          assignedTo: [target.id],
+          dueAt: due.toISOString(),
+        },
+      });
+      await refresh();
+      toast.success(`Sent to ${target.fullName} for quality check.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not send the paper.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const onPickImage = async (file?: File) => {
@@ -87,17 +117,11 @@ function DesignerPaper() {
           </p>
         </div>
         <div className="no-print flex flex-wrap gap-2">
-          <button
-            className={btnGhost}
-            onClick={() => downloadPdf({ meta: paper.meta, set, diagrams: paper.diagrams, signature: paper.dqc_signature })}
-          >
-            Download PDF
-          </button>
-          <button className={btnGhost} onClick={() => downloadWord({ meta: paper.meta, set, signature: paper.dqc_signature })}>
-            Download Word
-          </button>
-          <button className={btn} disabled={!finalized || readOnly} onClick={sendToDqc}>
-            Send to DQC
+          <span className="text-muted-foreground self-center text-xs">
+            Printing and downloading happen in the exam coordinator login after DQC approval.
+          </span>
+          <button className={btn} disabled={!finalized || readOnly || sending} onClick={sendToDqc}>
+            {sending ? "Sending…" : "Send to DQC"}
           </button>
         </div>
       </div>
@@ -117,7 +141,7 @@ function DesignerPaper() {
               active === i ? "border-brand text-brand border-b-2" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Set {i + 1} · {s.difficulty}
+            Set {i + 1} · {btLabel[s.bt]}
             {paper.selected_set_index === i ? " ✓" : ""}
           </button>
         ))}
@@ -138,7 +162,7 @@ function DesignerPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Set ${active + 1} — ${set.difficulty}`}
+          setLabel={`Set ${active + 1} — ${btLabel[set.bt]}`}
           showAttachHint={!readOnly}
           onAttachClick={(key) => {
             setAttachKey(key);

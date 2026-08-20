@@ -10,17 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrackingRouteImport } from './routes/tracking'
+import { Route as AuthForgotRouteImport } from './routes/auth.forgot'
+import { Route as AuthRegisterRouteImport } from './routes/auth.register'
+import { Route as AuthResetRouteImport } from './routes/auth.reset'
 import { Route as CoordIndexRouteImport } from './routes/coord/index'
 import { Route as DesignerIndexRouteImport } from './routes/designer/index'
 import { Route as DesignerNewRouteImport } from './routes/designer/new'
 import { Route as DqcIndexRouteImport } from './routes/dqc/index'
+import { Route as HodIndexRouteImport } from './routes/hod/index'
 import { Route as CoordPaperIdRouteImport } from './routes/coord/paper.$id'
+import { Route as CoordPrintIdRouteImport } from './routes/coord/print.$id'
 import { Route as DesignerPaperIdRouteImport } from './routes/designer/paper.$id'
 import { Route as DqcPaperIdRouteImport } from './routes/dqc/paper.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackingRoute = TrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthForgotRoute = AuthForgotRouteImport.update({
+  id: '/auth/forgot',
+  path: '/auth/forgot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/auth/reset',
+  path: '/auth/reset',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoordIndexRoute = CoordIndexRouteImport.update({
@@ -43,9 +69,19 @@ const DqcIndexRoute = DqcIndexRouteImport.update({
   path: '/dqc/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HodIndexRoute = HodIndexRouteImport.update({
+  id: '/hod/',
+  path: '/hod/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoordPaperIdRoute = CoordPaperIdRouteImport.update({
   id: '/coord/paper/$id',
   path: '/coord/paper/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoordPrintIdRoute = CoordPrintIdRouteImport.update({
+  id: '/coord/print/$id',
+  path: '/coord/print/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignerPaperIdRoute = DesignerPaperIdRouteImport.update({
@@ -61,32 +97,50 @@ const DqcPaperIdRoute = DqcPaperIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/tracking': typeof TrackingRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord/': typeof CoordIndexRoute
   '/designer/': typeof DesignerIndexRoute
   '/dqc/': typeof DqcIndexRoute
+  '/hod/': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/tracking': typeof TrackingRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord': typeof CoordIndexRoute
   '/designer': typeof DesignerIndexRoute
   '/dqc': typeof DqcIndexRoute
+  '/hod': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/tracking': typeof TrackingRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord/': typeof CoordIndexRoute
   '/designer/': typeof DesignerIndexRoute
   '/dqc/': typeof DqcIndexRoute
+  '/hod/': typeof HodIndexRoute
   '/coord/paper/$id': typeof CoordPaperIdRoute
+  '/coord/print/$id': typeof CoordPrintIdRoute
   '/designer/paper/$id': typeof DesignerPaperIdRoute
   '/dqc/paper/$id': typeof DqcPaperIdRoute
 }
@@ -94,42 +148,66 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/tracking'
+    | '/auth/forgot'
+    | '/auth/register'
+    | '/auth/reset'
     | '/designer/new'
     | '/coord/'
     | '/designer/'
     | '/dqc/'
+    | '/hod/'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/tracking'
+    | '/auth/forgot'
+    | '/auth/register'
+    | '/auth/reset'
     | '/designer/new'
     | '/coord'
     | '/designer'
     | '/dqc'
+    | '/hod'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   id:
     | '__root__'
     | '/'
+    | '/tracking'
+    | '/auth/forgot'
+    | '/auth/register'
+    | '/auth/reset'
     | '/designer/new'
     | '/coord/'
     | '/designer/'
     | '/dqc/'
+    | '/hod/'
     | '/coord/paper/$id'
+    | '/coord/print/$id'
     | '/designer/paper/$id'
     | '/dqc/paper/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TrackingRoute: typeof TrackingRoute
+  AuthForgotRoute: typeof AuthForgotRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthResetRoute: typeof AuthResetRoute
   DesignerNewRoute: typeof DesignerNewRoute
   CoordIndexRoute: typeof CoordIndexRoute
   DesignerIndexRoute: typeof DesignerIndexRoute
   DqcIndexRoute: typeof DqcIndexRoute
+  HodIndexRoute: typeof HodIndexRoute
   CoordPaperIdRoute: typeof CoordPaperIdRoute
+  CoordPrintIdRoute: typeof CoordPrintIdRoute
   DesignerPaperIdRoute: typeof DesignerPaperIdRoute
   DqcPaperIdRoute: typeof DqcPaperIdRoute
 }
@@ -141,6 +219,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tracking': {
+      id: '/tracking'
+      path: '/tracking'
+      fullPath: '/tracking'
+      preLoaderRoute: typeof TrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/forgot': {
+      id: '/auth/forgot'
+      path: '/auth/forgot'
+      fullPath: '/auth/forgot'
+      preLoaderRoute: typeof AuthForgotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/auth/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coord/': {
@@ -171,11 +277,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DqcIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hod/': {
+      id: '/hod/'
+      path: '/hod'
+      fullPath: '/hod/'
+      preLoaderRoute: typeof HodIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/coord/paper/$id': {
       id: '/coord/paper/$id'
       path: '/coord/paper/$id'
       fullPath: '/coord/paper/$id'
       preLoaderRoute: typeof CoordPaperIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coord/print/$id': {
+      id: '/coord/print/$id'
+      path: '/coord/print/$id'
+      fullPath: '/coord/print/$id'
+      preLoaderRoute: typeof CoordPrintIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/designer/paper/$id': {
@@ -197,11 +317,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TrackingRoute: TrackingRoute,
+  AuthForgotRoute: AuthForgotRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+  AuthResetRoute: AuthResetRoute,
   DesignerNewRoute: DesignerNewRoute,
   CoordIndexRoute: CoordIndexRoute,
   DesignerIndexRoute: DesignerIndexRoute,
   DqcIndexRoute: DqcIndexRoute,
+  HodIndexRoute: HodIndexRoute,
   CoordPaperIdRoute: CoordPaperIdRoute,
+  CoordPrintIdRoute: CoordPrintIdRoute,
   DesignerPaperIdRoute: DesignerPaperIdRoute,
   DqcPaperIdRoute: DqcPaperIdRoute,
 }

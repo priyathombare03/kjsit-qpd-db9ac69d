@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { PaperList } from "@/components/PaperList";
 import { RoleGuard } from "@/components/RoleGuard";
 import type { PaperRow, PaperStatus } from "@/lib/paper-types";
-import { listPapers, markAllRead, statusLabel } from "@/lib/papers-db";
-import { readUser } from "@/lib/auth";
+import { listPapers, statusLabel } from "@/lib/papers-db";
 
 export const Route = createFileRoute("/designer/")({
   head: () => ({
@@ -34,8 +33,6 @@ function DesignerHome() {
       .then(setPapers)
       .catch(() => setPapers([]))
       .finally(() => setLoading(false));
-    const user = readUser();
-    if (user) markAllRead(user.email);
   }, []);
 
   return (

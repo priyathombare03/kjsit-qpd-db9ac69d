@@ -1,59 +1,106 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "designer" | "dqc" | "coord";
+export type Role = "hod" | "dqc" | "designer" | "coord";
+export type AccountStatus = "pending" | "active" | "rejected";
 
-export type DemoUser = { email: string; role: Role };
+export type SessionUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  department: string;
+  institutionId: string | null;
+  status: AccountStatus;
+  roles: Role[];
+};
 
-export const DEMO_USERS: DemoUser[] = [
-  { email: "designer@somaiya.edu", role: "designer" },
-  { email: "dqc@somaiya.edu", role: "dqc" },
-  { email: "examcoord@somaiya.edu", role: "coord" },
-];
-
-const KEY = "qpd-demo-user";
+export const ROLE_ORDER: Role[] = ["hod", "dqc", "coord", "designer"];
 
 export function roleHome(role: Role) {
-  return role === "designer" ? "/designer" : role === "dqc" ? "/dqc" : "/coord";
+  return role === "hod" ? "/hod" : role === "dqc" ? "/dqc" : role === "coord" ? "/coord" : "/designer";
+}
+
+export function homeFor(user: SessionUser | null) {
+  if (!user) return "/";
+  const primary = ROLE_ORDER.find((r) => user.roles.includes(r)) ?? "designer";
+  return roleHome(primary);
 }
 
 export function roleLabel(role: Role) {
-  return role === "designer" ? "Faculty (Designer)" : role === "dqc" ? "DQC Member" : "Exam Coordinator";
+  return role === "hod"
+    ? "Head of Department"
+    : role === "dqc"
+      ? "DQC Member"
+      : role === "coord"
+        ? "Exam Coordinator"
+        : "Faculty (Designer)";
 }
 
-export function readUser(): DemoUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as DemoUser) : null;
-  } catch {
-    return null;
-  }
+export function primaryRole(user: SessionUser | null): Role | null {
+  if (!user) return null;
+  return ROLE_ORDER.find((r) => user.roles.includes(r)) ?? null;
 }
 
-export function signIn(user: DemoUser) {
-  window.localStorage.setItem(KEY, JSON.stringify(user));
-  window.dispatchEvent(new Event("qpd-user-changed"));
+export async function fetchSessionUser(): Promise<SessionUser | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const authUser = auth.user;
+  if (!authUser) return null;
+
+  const [{ data: profile }, { data: roleRows }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", authUser.id).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", authUser.id),
+  ]);
+
+  return {
+    id: authUser.id,
+    email: authUser.email ?? profile?.email ?? "",
+    fullName: profile?.full_name ?? "",
+    department: profile?.department ?? "",
+    institutionId: profile?.institution_id ?? null,
+    status: (profile?.status ?? "pending") as AccountStatus,
+    roles: (roleRows ?? []).map((r) => r.role as Role),
+  };
 }
 
-export function signOut() {
-  window.localStorage.removeItem(KEY);
-  window.dispatchEvent(new Event("qpd-user-changed"));
+export async function signOutUser() {
+  await supabase.auth.signOut();
 }
 
-/** Demo session read from localStorage. Returns null until hydrated. */
-export function useUser(): DemoUser | null {
-  const [user, setUser] = useState<DemoUser | null>(null);
+/** Live session + profile + roles. `loading` is true until the first resolve. */
+export function useAuth() {
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const sync = () => setUser(readUser());
-    sync();
-    window.addEventListener("qpd-user-changed", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("qpd-user-changed", sync);
-      window.removeEventListener("storage", sync);
-    };
+  const refresh = useCallback(async () => {
+    try {
+      setUser(await fetchSessionUser());
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return user;
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const u = await fetchSessionUser().catch(() => null);
+      if (active) {
+        setUser(u);
+        setLoading(false);
+      }
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      void refresh();
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [refresh]);
+
+  return { user, loading, refresh };
 }

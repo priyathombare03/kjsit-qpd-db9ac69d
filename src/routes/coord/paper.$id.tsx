@@ -1,10 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { downloadPdf, downloadWord } from "@/lib/export";
-import type { PaperRow } from "@/lib/paper-types";
+import { btLabel, type PaperRow } from "@/lib/paper-types";
 import { getPaper } from "@/lib/papers-db";
 
 export const Route = createFileRoute("/coord/paper/$id")({
@@ -27,6 +27,7 @@ const btnGhost = "rounded-lg border border-border px-4 py-2 text-sm font-medium 
 
 function CoordPaper() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const [paper, setPaper] = useState<PaperRow | null>(null);
 
   useEffect(() => {
@@ -36,6 +37,13 @@ function CoordPaper() {
   }, [id]);
 
   if (!paper) return <p className="text-muted-foreground p-8 text-sm">Loading paper…</p>;
+  if (paper.status !== "approved") {
+    return (
+      <p className="text-destructive p-8 text-sm">
+        This paper is not DQC-approved yet, so printing and downloading are locked.
+      </p>
+    );
+  }
   const set = paper.sets[paper.selected_set_index ?? 0];
   if (!set) return <p className="text-muted-foreground p-8 text-sm">This paper has no finalized set.</p>;
 
@@ -49,16 +57,29 @@ function CoordPaper() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className={btnGhost} onClick={() => window.print()}>
-            Print
+          <button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-2 text-sm font-medium"
+            onClick={() => navigate({ to: "/coord/print/$id", params: { id } })}
+          >
+            Print direct
           </button>
           <button
             className={btnGhost}
-            onClick={() => downloadPdf({ meta: paper.meta, set, diagrams: paper.diagrams, signature: paper.dqc_signature })}
+            onClick={() =>
+              downloadPdf({
+                meta: paper.meta,
+                set,
+                diagrams: paper.diagrams,
+                signature: paper.dqc_signature,
+                includeCourseOutcomes: false,
+              })
+            }
           >
             Download PDF
           </button>
-          <button className={btnGhost} onClick={() => downloadWord({ meta: paper.meta, set, signature: paper.dqc_signature })}>
+          <button className={btnGhost} onClick={() =>
+              downloadWord({ meta: paper.meta, set, signature: paper.dqc_signature, includeCourseOutcomes: false })
+            }>
             Download Word
           </button>
         </div>
@@ -70,7 +91,7 @@ function CoordPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Final paper — ${set.difficulty}`}
+          setLabel={`Final paper — ${btLabel[set.bt]}`}
         />
       </div>
     </main>
