@@ -90,8 +90,15 @@ export async function downloadPdf({ meta, set, diagrams = {}, signature, include
 
   y += 10;
   for (const slot of getPattern(meta.marks)) {
+    if (slot.isOr) {
+      nextPage(20);
+      doc.setFont("times", "bold");
+      doc.text("OR", margin + width / 2 - 8, y);
+      doc.setFont("times", "normal");
+      y += 16;
+    }
     const q = set.questions.find((x) => x.key === slot.key);
-    const label = `${slot.qNo} ${slot.subQ})`;
+    const label = slotLabel(slot, meta.marks);
     const text = includeCourseOutcomes
       ? `${label} ${q?.text ?? ""}   [${slot.marks} marks | ${q?.co ?? ""} | ${q?.bloom ?? slot.bloom}]`
       : `${label} ${q?.text ?? ""}   [${slot.marks} marks]`;
@@ -99,6 +106,7 @@ export async function downloadPdf({ meta, set, diagrams = {}, signature, include
     nextPage(wrapped.length * 14 + 10);
     doc.text(wrapped, margin, y);
     y += wrapped.length * 14 + 6;
+
 
     const diagram = diagrams[slot.key];
     if (diagram) {
