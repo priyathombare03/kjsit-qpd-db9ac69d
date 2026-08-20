@@ -1,5 +1,7 @@
 import { getPattern, type Bloom } from "./paper-pattern";
 import type { GeneratedSet, PaperMeta } from "./paper-types";
+import { matchInBank, parseQuestionBank, pickFromBank } from "./question-bank";
+
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-3.5-flash";
