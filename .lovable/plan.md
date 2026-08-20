@@ -88,12 +88,19 @@ This is why assignment is its own table rather than a column on `papers`: multip
 - DQC resolution runs in a server function so scope tables are not exposed to the browser.
 - PDF export embeds the logo as a base64 image at the top of page one in `src/lib/export.ts`; the CO block is emitted only when `includeCourseOutcomes` is true (false for print-direct/exam copies).
 - Migration is one step: create the new tables with grants and RLS, backfill existing papers to the current institution and derive `year_level` from `className`.
+- Registration creates the profile via a trigger on new auth users with `account_status = 'pending'`; a security-definer approval function flips it, callable only by an HOD of the same department. Signups stay email-confirmed (no auto-confirm, no anonymous access).
+- Password reset uses the platform's built-in reset email plus a `/auth/reset` page; if you want the reset mail branded with the Somaiya identity, that needs a verified sending domain — tell me and I will wire it.
+- Realtime notifications use a Supabase realtime subscription on `notifications` filtered to the signed-in user's email, replacing the 15-second polling in `AppHeader`.
+- Reminders are sent through a server function that verifies the caller is a coordinator or HOD, writes the notification, and increments the reminder counters.
 
 ## Suggested build order
 
-1. Migration: institutions, profiles, roles, DQC scopes, academic years/semesters, assignments (+ grants and RLS).
-2. Auth rework and login institution selector.
+1. Migration: institutions, profiles (+status), roles, DQC scopes, academic years/semesters, assignments, notification types (+ grants and RLS).
+2. Real auth: login with institution selector, faculty registration with HOD approval, forgot/reset password.
 3. Year/semester cascading dropdowns and BT H/M set labels.
+4. HOD assign flow with DQC resolution (including overlap handling).
+5. DQC queue filtered by assignment.
+6. Tracking dashboard, realtime notification bell, and coordinator reminders.
 4. HOD assign flow with DQC resolution (including overlap handling).
 5. DQC queue filtered by assignment.
 6. Tracking dashboard.
