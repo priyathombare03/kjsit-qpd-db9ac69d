@@ -148,12 +148,14 @@ function RenderGroup({
   diagrams,
   showAttachHint,
   onAttachClick,
+  examView,
 }: {
   group: QGroup;
   questions: GeneratedSet["questions"];
   diagrams: DiagramMap;
   showAttachHint?: boolean | undefined;
   onAttachClick?: ((key: string) => void) | undefined;
+  examView?: boolean | undefined;
 }) {
   const rows: React.ReactElement[] = [];
   group.slots.forEach((slot, idx) => {
