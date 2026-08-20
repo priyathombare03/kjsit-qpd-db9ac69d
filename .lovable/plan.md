@@ -29,7 +29,8 @@
 Existing `papers` and `notifications` tables stay; new tables are added around them.
 
 ```text
-profiles            id (auth user), email, full_name, institution_id, department
+profiles            id (auth user), email, full_name, institution_id, department,
+                    account_status (pending|active|rejected), approved_by, approved_at
 institutions        id, code, name              -- powers the login portal selector
 user_roles          id, user_id, role           -- enum: hod | dqc | designer | coord
 dqc_scopes          id, user_id, year_level     -- enum: SY | TY | LY, one row per year a DQC owns
@@ -38,7 +39,9 @@ semesters           id, academic_year_id, year_level, label ("V"), is_active
 paper_assignments   id, paper_id, assigned_by (HOD), assigned_to (DQC),
                     year_level, academic_year_id, semester_id,
                     status (assigned|in_review|approved|returned),
-                    is_primary, submitted_at, decided_at, note
+                    is_primary, due_at, submitted_at, decided_at, note,
+                    reminder_count, last_reminded_at, last_reminded_by
+notifications       (existing) + type (assignment|decision|reminder|approval), realtime enabled
 ```
 
 `papers` gains: `institution_id`, `year_level`, `academic_year_id`, `semester_id`, and `bt_level` per set (stored inside the existing `sets` JSON as `bt: "H" | "M"`).
