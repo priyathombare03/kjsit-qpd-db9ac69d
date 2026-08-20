@@ -70,7 +70,7 @@ function CoordPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Final paper — ${set.difficulty}`}
+          setLabel={`Final paper — ${btLabel[set.bt]}`}
         />
       </div>
     </main>

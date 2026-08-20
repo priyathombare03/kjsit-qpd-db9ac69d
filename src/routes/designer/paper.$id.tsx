@@ -117,7 +117,7 @@ function DesignerPaper() {
               active === i ? "border-brand text-brand border-b-2" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Set {i + 1} · {s.difficulty}
+            Set {i + 1} · {btLabel[s.bt]}
             {paper.selected_set_index === i ? " ✓" : ""}
           </button>
         ))}
@@ -138,7 +138,7 @@ function DesignerPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Set ${active + 1} — ${set.difficulty}`}
+          setLabel={`Set ${active + 1} — ${btLabel[set.bt]}`}
           showAttachHint={!readOnly}
           onAttachClick={(key) => {
             setAttachKey(key);

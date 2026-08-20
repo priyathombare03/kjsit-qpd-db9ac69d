@@ -126,7 +126,7 @@ function DqcPaper() {
           set={set}
           diagrams={paper.diagrams}
           signatureUrl={paper.dqc_signature}
-          setLabel={`Selected set — ${set.difficulty}`}
+          setLabel={`Selected set — ${btLabel[set.bt]}`}
         />
       </div>
 
