@@ -165,27 +165,51 @@ export async function downloadWord({ meta, set, signature, includeCourseOutcomes
 
   const metaParas = metaLines(meta).map((line) => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] }));
 
+  const showSubQ = hasSubQColumn(meta.marks);
+  const headCells = [
+    "Question No.",
+    ...(showSubQ ? ["Sub Question No."] : []),
+    "Statement of Question",
+    "Marks",
+    ...(includeCourseOutcomes ? ["CO", "BT Level"] : []),
+  ];
+  const colCount = headCells.length;
+
   const rows = [
     new TableRow({
-      children: (includeCourseOutcomes
-        ? ["Q. No.", "Sub Q.", "Statement of Question", "Marks", "CO", "BT Level"]
-        : ["Q. No.", "Sub Q.", "Statement of Question", "Marks"]
-      ).map(
+      children: headCells.map(
         (h) => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: h, bold: true })] })] }),
       ),
     }),
-    ...getPattern(meta.marks).map((slot) => {
+    ...getPattern(meta.marks).flatMap((slot) => {
       const q = set.questions.find((x) => x.key === slot.key);
-      return new TableRow({
-        children: (includeCourseOutcomes
-          ? [slot.qNo, slot.subQ, q?.text ?? "", String(slot.marks), q?.co ?? "", q?.bloom ?? slot.bloom]
-          : [slot.qNo, slot.subQ, q?.text ?? "", String(slot.marks)]
-        ).map(
-          (cell) => new TableCell({ children: [new Paragraph(String(cell))] }),
+      const cells = [
+        showSubQ ? slot.qNo : `${slot.qNo}${slot.subQ}`,
+        ...(showSubQ ? [`${slot.subQ})`] : []),
+        q?.text ?? "",
+        String(slot.marks),
+        ...(includeCourseOutcomes ? [q?.co ?? "", q?.bloom ?? slot.bloom] : []),
+      ];
+      const row = new TableRow({
+        children: cells.map((cell) => new TableCell({ children: [new Paragraph(String(cell))] })),
+      });
+      if (!slot.isOr) return [row];
+      const orRow = new TableRow({
+        children: Array.from({ length: colCount }, (_, i) =>
+          new TableCell({
+            children: [
+              new Paragraph({
+                alignment: i === (showSubQ ? 2 : 1) ? AlignmentType.CENTER : AlignmentType.LEFT,
+                children: [new TextRun({ text: i === (showSubQ ? 2 : 1) ? "OR" : "", bold: true })],
+              }),
+            ],
+          }),
         ),
       });
+      return [orRow, row];
     }),
   ];
+
 
   const cos = meta.courseOutcomes ?? {};
   const targetCOs = (meta.testNumber ?? (meta.marks === 20 ? 1 : 2)) === 1 ? ["CO1", "CO2", "CO3"] : ["CO4", "CO5", "CO6"];
