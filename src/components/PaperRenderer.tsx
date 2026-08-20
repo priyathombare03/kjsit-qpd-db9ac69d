@@ -49,6 +49,7 @@ export function PaperRenderer({
           </div>
           <div className="mt-2 text-[11pt]">Academic Year {meta.academicYear}</div>
           <div className="mt-1 text-[12pt] font-bold">{dept}</div>
+          <div className="mt-1 text-[11pt] font-semibold">Test {meta.testNumber ?? (meta.marks === 20 ? 1 : 2)}</div>
           {setLabel && <div className="text-brand mt-1 text-[10pt] font-semibold">{setLabel}</div>}
         </div>
       </div>
