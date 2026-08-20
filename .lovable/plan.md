@@ -11,12 +11,26 @@
 - Downloaded PDFs always print the Somaiya logo in the page header.
 - New **Index / Tracking dashboard**: one row per assignment showing course, year, assigned DQC, submitter, submitted-at, and status — so it is clear at a glance who has and has not submitted.
 
+## Accounts, sign-up and password reset
+
+- **Faculty self-registration**: a Register screen (name, institution, department, email, password) creates the account with the `designer` (faculty) role. New accounts land in a `pending` state until an HOD approves them, so strangers cannot enter the department workspace.
+- HOD sees a **Pending faculty** list on their dashboard and approves or rejects; approval flips the profile to `active` and the faculty member gets a notification.
+- **Forgot password** link on the login screen for every role: email entry -> reset email -> `/auth/reset` screen to set a new password. Reset uses the built-in auth email flow, so no passwords are ever handled by app code.
+- **Realtime notifications**: the bell in the header subscribes to live inserts on `notifications` instead of polling every 15 seconds, so approval, assignment, decision and reminder events appear immediately. A notifications panel lists them with read/unread state.
+
+## Submission reminders
+
+- The tracking dashboard flags any assignment past its due date with nothing submitted.
+- The Exam Coordinator (and HOD) can press **Send reminder** on such a row — individually or "remind all pending" — which writes a notification to the faculty member (delivered live via the bell) and records `reminder_count` / `last_reminded_at` on the assignment so nobody is spammed blindly.
+- Reminder history is visible on the row, and the faculty member's own dashboard shows an "Action required" banner for reminded papers.
+
 ## Proposed database schema
 
 Existing `papers` and `notifications` tables stay; new tables are added around them.
 
 ```text
-profiles            id (auth user), email, full_name, institution_id, department
+profiles            id (auth user), email, full_name, institution_id, department,
+                    account_status (pending|active|rejected), approved_by, approved_at
 institutions        id, code, name              -- powers the login portal selector
 user_roles          id, user_id, role           -- enum: hod | dqc | designer | coord
 dqc_scopes          id, user_id, year_level     -- enum: SY | TY | LY, one row per year a DQC owns
@@ -25,7 +39,9 @@ semesters           id, academic_year_id, year_level, label ("V"), is_active
 paper_assignments   id, paper_id, assigned_by (HOD), assigned_to (DQC),
                     year_level, academic_year_id, semester_id,
                     status (assigned|in_review|approved|returned),
-                    is_primary, submitted_at, decided_at, note
+                    is_primary, due_at, submitted_at, decided_at, note,
+                    reminder_count, last_reminded_at, last_reminded_by
+notifications       (existing) + type (assignment|decision|reminder|approval), realtime enabled
 ```
 
 `papers` gains: `institution_id`, `year_level`, `academic_year_id`, `semester_id`, and `bt_level` per set (stored inside the existing `sets` JSON as `bt: "H" | "M"`).
@@ -40,13 +56,16 @@ Access rules in plain English:
 
 | View | Purpose |
 | --- | --- |
-| `/` login | Institution selector + role selection, then sign in |
-| `/hod` | HOD inbox: papers in the department, filter by year/semester/status |
+| `/` login | Institution selector + email/password sign in, links to register and forgot password |
+| `/auth/register` | Faculty self-registration (name, institution, department, email, password) |
+| `/auth/forgot` + `/auth/reset` | Request a reset email, then set a new password |
+| `/hod` | HOD inbox: papers in the department, filter by year/semester/status, plus pending-faculty approvals |
 | `/hod/assign/$paperId` | Pick academic year -> semester (filtered) -> auto-resolved DQC, confirm/override, assign |
 | `/dqc` | Assigned-to-me queue, grouped by year level |
 | `/dqc/paper/$id` | Existing review screen + BT (H/M) per set, approve / return |
-| `/index` (tracking) | Table of all assignments: course, year, DQC, submitted by, submitted at, status, overdue flag |
-| `/designer/*`, `/coord/*` | Existing generation and distribution flows, updated to the new year/semester dropdowns |
+| `/index` (tracking) | Table of all assignments: course, year, DQC, submitted by, submitted at, status, overdue flag, Send reminder |
+| `/designer/*`, `/coord/*` | Existing generation and distribution flows, updated to the new year/semester dropdowns; coordinator gets reminder controls |
+| Notifications panel | Realtime list from the header bell, mark-as-read |
 | Print view | Exam-facing layout, CO column hidden, logo header, `window.print()` |
 
 ## Routing logic and the overlap edge case
@@ -69,12 +88,19 @@ This is why assignment is its own table rather than a column on `papers`: multip
 - DQC resolution runs in a server function so scope tables are not exposed to the browser.
 - PDF export embeds the logo as a base64 image at the top of page one in `src/lib/export.ts`; the CO block is emitted only when `includeCourseOutcomes` is true (false for print-direct/exam copies).
 - Migration is one step: create the new tables with grants and RLS, backfill existing papers to the current institution and derive `year_level` from `className`.
+- Registration creates the profile via a trigger on new auth users with `account_status = 'pending'`; a security-definer approval function flips it, callable only by an HOD of the same department. Signups stay email-confirmed (no auto-confirm, no anonymous access).
+- Password reset uses the platform's built-in reset email plus a `/auth/reset` page; if you want the reset mail branded with the Somaiya identity, that needs a verified sending domain — tell me and I will wire it.
+- Realtime notifications use a Supabase realtime subscription on `notifications` filtered to the signed-in user's email, replacing the 15-second polling in `AppHeader`.
+- Reminders are sent through a server function that verifies the caller is a coordinator or HOD, writes the notification, and increments the reminder counters.
 
 ## Suggested build order
 
-1. Migration: institutions, profiles, roles, DQC scopes, academic years/semesters, assignments (+ grants and RLS).
-2. Auth rework and login institution selector.
+1. Migration: institutions, profiles (+status), roles, DQC scopes, academic years/semesters, assignments, notification types (+ grants and RLS).
+2. Real auth: login with institution selector, faculty registration with HOD approval, forgot/reset password.
 3. Year/semester cascading dropdowns and BT H/M set labels.
+4. HOD assign flow with DQC resolution (including overlap handling).
+5. DQC queue filtered by assignment.
+6. Tracking dashboard, realtime notification bell, and coordinator reminders.
 4. HOD assign flow with DQC resolution (including overlap handling).
 5. DQC queue filtered by assignment.
 6. Tracking dashboard.
