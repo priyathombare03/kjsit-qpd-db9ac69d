@@ -64,9 +64,10 @@ Access rules in plain English:
 | `/dqc` | Assigned-to-me queue, grouped by year level |
 | `/dqc/paper/$id` | Existing review screen + BT (H/M) per set, approve / return |
 | `/index` (tracking) | Table of all assignments: course, year, DQC, submitted by, submitted at, status, overdue flag, Send reminder |
-| `/designer/*`, `/coord/*` | Existing generation and distribution flows, updated to the new year/semester dropdowns; coordinator gets reminder controls |
+| `/designer/*` | Existing generation flow, updated to the new year/semester dropdowns; no print/download |
+| `/coord` | Coordinator inbox of DQC-approved papers only, with Print direct / Download PDF / Download Word per paper |
+| `/coord/print/$id` | Exam-facing print view (coordinator-only): logo header, CO hidden, auto `window.print()` |
 | Notifications panel | Realtime list from the header bell, mark-as-read |
-| Print view | Exam-facing layout, CO column hidden, logo header, `window.print()` |
 
 ## Routing logic and the overlap edge case
 
