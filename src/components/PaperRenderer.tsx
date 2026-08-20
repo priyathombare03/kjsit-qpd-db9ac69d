@@ -154,6 +154,7 @@ function groupByQ(pattern: PatternSlot[]): QGroup[] {
 
 function RenderGroup({
   group,
+  marks,
   questions,
   diagrams,
   showAttachHint,
@@ -161,20 +162,33 @@ function RenderGroup({
   examView,
 }: {
   group: QGroup;
+  marks: 20 | 30;
   questions: GeneratedSet["questions"];
   diagrams: DiagramMap;
   showAttachHint?: boolean | undefined;
   onAttachClick?: ((key: string) => void) | undefined;
   examView?: boolean | undefined;
 }) {
+  const showSubQ = hasSubQColumn(marks);
+  const colSpan = 2 + (showSubQ ? 1 : 0) + (examView ? 0 : 2);
   const rows: React.ReactElement[] = [];
   group.slots.forEach((slot, idx) => {
     const q = questions.find((x) => x.key === slot.key);
     const diag = diagrams[slot.key];
+    if (slot.isOr) {
+      rows.push(
+        <tr key={`${slot.key}-or`}>
+          <td>{slot.qNo}</td>
+          <td colSpan={colSpan} className="text-center font-bold">
+            OR
+          </td>
+        </tr>,
+      );
+    }
     rows.push(
       <tr key={slot.key}>
-        <td>{idx === 0 ? slot.qNo : ""}</td>
-        <td>{slot.subQ}</td>
+        <td>{showSubQ ? (idx === 0 || slot.isOr ? slot.qNo : "") : slotLabel(slot, marks)}</td>
+        {showSubQ && <td>{slot.subQ})</td>}
         <td>
           <div>{q?.text ?? ""}</div>
           {diag ? (
@@ -197,6 +211,7 @@ function RenderGroup({
   });
   return <>{rows}</>;
 }
+
 
 function CourseOutcomesFooter({ meta }: { meta: PaperMeta }) {
   const testNumber: 1 | 2 = meta.testNumber ?? (meta.marks === 20 ? 1 : 2);
