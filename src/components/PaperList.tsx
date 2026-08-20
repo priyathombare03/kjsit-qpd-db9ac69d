@@ -2,7 +2,13 @@ import { Link } from "@tanstack/react-router";
 import type { PaperRow } from "@/lib/paper-types";
 import { statusLabel } from "@/lib/papers-db";
 
-export function PaperList({ papers, basePath }: { papers: PaperRow[]; basePath: "/designer" | "/dqc" | "/coord" }) {
+export function PaperList({
+  papers,
+  basePath,
+}: {
+  papers: PaperRow[];
+  basePath: "/designer" | "/dqc" | "/coord" | "/hod";
+}) {
   if (papers.length === 0) {
     return <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">No papers here yet.</p>;
   }
