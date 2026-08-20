@@ -1,6 +1,13 @@
 import type React from "react";
 import logo from "@/assets/svv-logo.png";
-import { getPattern, paperInstruction, paperTime, type PatternSlot } from "@/lib/paper-pattern";
+import {
+  getPattern,
+  hasSubQColumn,
+  paperInstruction,
+  paperTime,
+  slotLabel,
+  type PatternSlot,
+} from "@/lib/paper-pattern";
 import type { GeneratedSet, PaperMeta } from "@/lib/paper-types";
 
 export type DiagramMap = Record<string, string>;
@@ -26,6 +33,7 @@ export function PaperRenderer({
   examView?: boolean;
 }) {
   const pattern = getPattern(meta.marks);
+  const showSubQ = hasSubQColumn(meta.marks);
   const dept = meta.department || "DEPARTMENT OF ARTIFICIAL INTELLIGENCE AND DATA SCIENCE";
   const grouped = groupByQ(pattern);
 
