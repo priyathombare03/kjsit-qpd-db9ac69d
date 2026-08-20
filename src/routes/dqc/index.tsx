@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PaperList } from "@/components/PaperList";
 import { RoleGuard } from "@/components/RoleGuard";
-import { readUser } from "@/lib/auth";
 import type { PaperRow } from "@/lib/paper-types";
-import { listPapers, markAllRead } from "@/lib/papers-db";
+import { listPapers } from "@/lib/papers-db";
 
 export const Route = createFileRoute("/dqc/")({
   head: () => ({
@@ -31,8 +30,6 @@ function DqcHome() {
       .then(setPapers)
       .catch(() => setPapers([]))
       .finally(() => setLoading(false));
-    const user = readUser();
-    if (user) markAllRead(user.email);
   }, []);
 
   return (
