@@ -137,7 +137,7 @@ export async function downloadPdf({ meta, set, diagrams = {}, signature, include
     });
   }
 
-  if (signature) {
+  if (signature && includeCourseOutcomes) {
     try {
       nextPage(80);
       y += 10;
