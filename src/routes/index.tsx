@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSessionUser, homeFor } from "@/lib/auth";
 import { listInstitutions, type Institution } from "@/lib/reference-db";
+import logo from "@/assets/svv-logo.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,7 +71,14 @@ function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="bg-card border-border w-full max-w-md rounded-xl border p-6 shadow-sm sm:p-8">
-        <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
+        <div className="flex justify-center">
+          <img
+            src={logo}
+            alt="Somaiya Vidyavihar University crest"
+            className="h-20 w-20 object-contain"
+          />
+        </div>
+        <h1 className="mt-3 text-center text-xl font-semibold tracking-tight">Sign in</h1>
 
 
         <form onSubmit={submit} className="mt-6 space-y-4">
