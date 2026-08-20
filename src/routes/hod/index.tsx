@@ -172,7 +172,7 @@ function HodHome() {
         {loading ? (
           <p className="text-muted-foreground text-sm">Loading…</p>
         ) : tab === "papers" ? (
-          <PaperList papers={papers} basePath="/dqc" />
+          <PaperList papers={papers} basePath="/hod" />
         ) : (
           <ul className="space-y-3">
             {members.map((m) => (

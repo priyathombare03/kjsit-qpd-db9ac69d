@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { diagramsForSet } from "@/lib/diagrams";
 import { PaperRenderer } from "@/components/PaperRenderer";
 import { RoleGuard } from "@/components/RoleGuard";
 import { fileToDataUrl } from "@/lib/extract";
@@ -43,6 +44,7 @@ function DqcPaper() {
   }, [id]);
 
   const set = paper?.sets[paper.selected_set_index ?? 0];
+  const diagrams = diagramsForSet(paper?.diagrams, paper?.selected_set_index ?? 0);
 
   const analysis = useMemo(() => {
     if (!paper || !set) return null;
@@ -133,7 +135,7 @@ function DqcPaper() {
         <PaperRenderer
           meta={paper.meta}
           set={set}
-          diagrams={paper.diagrams}
+          diagrams={diagrams}
           signatureUrl={paper.dqc_signature}
           setLabel={`Selected set — ${btLabel[set.bt]}`}
         />

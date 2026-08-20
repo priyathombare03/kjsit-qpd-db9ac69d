@@ -15,16 +15,18 @@ export const resolveDqcs = createServerFn({ method: "POST" })
     const ids = (scopes ?? []).map((s: { user_id: string }) => s.user_id);
     if (ids.length === 0) return [];
 
+    // Department is a free-text field, so it must not be a hard filter: a DQC
+    // member is valid for the whole institution, with same-department first.
     const { data: profiles } = await db
       .from("profiles")
       .select("id, email, full_name, department, institution_id, status")
       .in("id", ids)
       .eq("status", "active")
-      .eq("institution_id", me.institution_id)
-      .eq("department", me.department);
+      .eq("institution_id", me.institution_id);
 
     const candidates = profiles ?? [];
     if (candidates.length === 0) return [];
+
 
     const { data: open } = await db
       .from("paper_assignments")
@@ -41,13 +43,16 @@ export const resolveDqcs = createServerFn({ method: "POST" })
     }
 
     return candidates
-      .map((c: { id: string; email: string; full_name: string }) => ({
+      .map((c: { id: string; email: string; full_name: string; department: string }) => ({
         id: c.id,
         email: c.email,
         fullName: c.full_name || c.email,
         openLoad: load.get(c.id) ?? 0,
+        sameDept: c.department === me.department ? 0 : 1,
       }))
-      .sort((a: DqcCandidate, b: DqcCandidate) => a.openLoad - b.openLoad);
+      .sort((a, b) => a.sameDept - b.sameDept || a.openLoad - b.openLoad)
+      .map(({ sameDept: _sameDept, ...c }) => c);
+
   });
 
 /** Faculty (or HOD) finalizes a paper: create assignment rows, flag the paper, notify + email the DQC. */
