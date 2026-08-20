@@ -43,13 +43,16 @@ export const resolveDqcs = createServerFn({ method: "POST" })
     }
 
     return candidates
-      .map((c: { id: string; email: string; full_name: string }) => ({
+      .map((c: { id: string; email: string; full_name: string; department: string }) => ({
         id: c.id,
         email: c.email,
         fullName: c.full_name || c.email,
         openLoad: load.get(c.id) ?? 0,
+        sameDept: c.department === me.department ? 0 : 1,
       }))
-      .sort((a: DqcCandidate, b: DqcCandidate) => a.openLoad - b.openLoad);
+      .sort((a, b) => a.sameDept - b.sameDept || a.openLoad - b.openLoad)
+      .map(({ sameDept: _sameDept, ...c }) => c);
+
   });
 
 /** Faculty (or HOD) finalizes a paper: create assignment rows, flag the paper, notify + email the DQC. */
