@@ -87,7 +87,8 @@ This is why assignment is its own table rather than a column on `papers`: multip
 - Real Supabase auth replaces the current localStorage demo session; the `_authenticated` route gate protects HOD/DQC areas, and RLS policies scope every table by `auth.uid()` and role.
 - Year -> semester filtering is data-driven from `semesters`, not hardcoded, so a new academic year needs no code change.
 - DQC resolution runs in a server function so scope tables are not exposed to the browser.
-- PDF export embeds the logo as a base64 image at the top of page one in `src/lib/export.ts`; the CO block is emitted only when `includeCourseOutcomes` is true (false for print-direct/exam copies).
+- PDF/Word export in `src/lib/export.ts` embeds the Somaiya logo as a base64 image in the page header, and emits the CO block only when `includeCourseOutcomes` is true — the coordinator's exam copy passes false.
+- Export and print are gated twice: the buttons render only for the coordinator role, and the underlying route/server function refuses any paper whose status is not `approved`, so an unapproved paper cannot be printed even by URL.
 - Migration is one step: create the new tables with grants and RLS, backfill existing papers to the current institution and derive `year_level` from `className`.
 - Registration creates the profile via a trigger on new auth users with `account_status = 'pending'`; a security-definer approval function flips it, callable only by an HOD of the same department. Signups stay email-confirmed (no auto-confirm, no anonymous access).
 - Password reset uses the platform's built-in reset email plus a `/auth/reset` page; if you want the reset mail branded with the Somaiya identity, that needs a verified sending domain — tell me and I will wire it.
