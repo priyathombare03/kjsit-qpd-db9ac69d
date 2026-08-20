@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchSessionUser, homeFor } from "@/lib/auth";
 import { listInstitutions, type Institution } from "@/lib/reference-db";
