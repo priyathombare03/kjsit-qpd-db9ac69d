@@ -85,8 +85,8 @@ export function PaperRenderer({
       <table>
         <thead>
           <tr>
-            <th style={{ width: "8%" }}>Q. No.</th>
-            <th style={{ width: "8%" }}>Sub Q.</th>
+            <th style={{ width: showSubQ ? "8%" : "12%" }}>Question No.</th>
+            {showSubQ && <th style={{ width: "10%" }}>Sub Question No.</th>}
             <th>Statement of Question</th>
             <th style={{ width: "8%" }}>Marks</th>
             {!examView && <th style={{ width: "8%" }}>CO</th>}
@@ -98,6 +98,7 @@ export function PaperRenderer({
             <RenderGroup
               key={group.qNo}
               group={group}
+              marks={meta.marks}
               questions={set.questions}
               diagrams={diagrams}
               showAttachHint={showAttachHint}
@@ -107,6 +108,7 @@ export function PaperRenderer({
           ))}
         </tbody>
       </table>
+
 
       {!examView && <CourseOutcomesFooter meta={meta} />}
 
