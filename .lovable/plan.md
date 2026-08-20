@@ -119,6 +119,7 @@ This is why assignment is its own table rather than a column on `papers`: multip
 3. Year/semester cascading dropdowns and BT H/M set labels.
 4. HOD assign flow with DQC resolution (including overlap handling).
 5. DQC queue filtered by assignment.
-6. Tracking dashboard, realtime notification bell, and coordinator reminders.
-7. Coordinator-only print/download of DQC-approved papers: CO hidden, Somaiya logo in the header.
-8. PWA manifest, icons and mobile responsive pass.
+6. Email sending domain + DQC "paper ready for review" email with deep link (queue stays as backup).
+7. Tracking dashboard, realtime notification bell, and coordinator/HOD reminders (in-app + email).
+8. Coordinator-only print/download of DQC-approved papers: CO hidden, Somaiya logo in the header.
+9. PWA manifest, icons and mobile responsive pass.
