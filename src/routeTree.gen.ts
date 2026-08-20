@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRegisterRouteImport } from './routes/auth.register'
 import { Route as CoordIndexRouteImport } from './routes/coord/index'
 import { Route as DesignerIndexRouteImport } from './routes/designer/index'
 import { Route as DesignerNewRouteImport } from './routes/designer/new'
@@ -21,6 +22,11 @@ import { Route as DqcPaperIdRouteImport } from './routes/dqc/paper.$id'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/auth/register',
+  path: '/auth/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoordIndexRoute = CoordIndexRouteImport.update({
@@ -61,6 +67,7 @@ const DqcPaperIdRoute = DqcPaperIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord/': typeof CoordIndexRoute
   '/designer/': typeof DesignerIndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord': typeof CoordIndexRoute
   '/designer': typeof DesignerIndexRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/register': typeof AuthRegisterRoute
   '/designer/new': typeof DesignerNewRoute
   '/coord/': typeof CoordIndexRoute
   '/designer/': typeof DesignerIndexRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth/register'
     | '/designer/new'
     | '/coord/'
     | '/designer/'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth/register'
     | '/designer/new'
     | '/coord'
     | '/designer'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/auth/register'
     | '/designer/new'
     | '/coord/'
     | '/designer/'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
   DesignerNewRoute: typeof DesignerNewRoute
   CoordIndexRoute: typeof CoordIndexRoute
   DesignerIndexRoute: typeof DesignerIndexRoute
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/auth/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coord/': {
@@ -197,6 +217,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
   DesignerNewRoute: DesignerNewRoute,
   CoordIndexRoute: CoordIndexRoute,
   DesignerIndexRoute: DesignerIndexRoute,
