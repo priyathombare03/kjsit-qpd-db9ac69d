@@ -56,13 +56,16 @@ Access rules in plain English:
 
 | View | Purpose |
 | --- | --- |
-| `/` login | Institution selector + role selection, then sign in |
-| `/hod` | HOD inbox: papers in the department, filter by year/semester/status |
+| `/` login | Institution selector + email/password sign in, links to register and forgot password |
+| `/auth/register` | Faculty self-registration (name, institution, department, email, password) |
+| `/auth/forgot` + `/auth/reset` | Request a reset email, then set a new password |
+| `/hod` | HOD inbox: papers in the department, filter by year/semester/status, plus pending-faculty approvals |
 | `/hod/assign/$paperId` | Pick academic year -> semester (filtered) -> auto-resolved DQC, confirm/override, assign |
 | `/dqc` | Assigned-to-me queue, grouped by year level |
 | `/dqc/paper/$id` | Existing review screen + BT (H/M) per set, approve / return |
-| `/index` (tracking) | Table of all assignments: course, year, DQC, submitted by, submitted at, status, overdue flag |
-| `/designer/*`, `/coord/*` | Existing generation and distribution flows, updated to the new year/semester dropdowns |
+| `/index` (tracking) | Table of all assignments: course, year, DQC, submitted by, submitted at, status, overdue flag, Send reminder |
+| `/designer/*`, `/coord/*` | Existing generation and distribution flows, updated to the new year/semester dropdowns; coordinator gets reminder controls |
+| Notifications panel | Realtime list from the header bell, mark-as-read |
 | Print view | Exam-facing layout, CO column hidden, logo header, `window.print()` |
 
 ## Routing logic and the overlap edge case
