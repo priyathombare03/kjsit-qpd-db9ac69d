@@ -92,8 +92,8 @@ function CoordPaper() {
           meta={paper.meta}
           set={set}
           diagrams={diagrams}
-          signatureUrl={paper.dqc_signature}
           setLabel={`Final paper — ${btLabel[set.bt]}`}
+          examView
         />
       </div>
     </main>
