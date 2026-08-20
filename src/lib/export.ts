@@ -228,11 +228,11 @@ export async function downloadWord({ meta, set, signature, includeCourseOutcomes
             ? [
                 new Paragraph({ children: [new TextRun({ text: "Course Outcomes:", bold: true })] }),
                 ...targetCOs.map((co) => new Paragraph(`${co}: ${cos[co] ?? "Not found in syllabus"}`)),
+                new Paragraph(" "),
+                new Paragraph(signature ? "DQC Verified (signature attached on the on-screen paper)" : "DQC Member: ______________"),
+                new Paragraph("Verified By: Dr. Milind Nemade — Head of the Department"),
               ]
             : []),
-          new Paragraph(" "),
-          new Paragraph(signature ? "DQC Verified (signature attached on the on-screen paper)" : "DQC Member: ______________"),
-          new Paragraph("Verified By: Dr. Milind Nemade — Head of the Department"),
         ],
       },
     ],
