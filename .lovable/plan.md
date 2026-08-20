@@ -109,5 +109,5 @@ This is why assignment is its own table rather than a column on `papers`: multip
 4. HOD assign flow with DQC resolution (including overlap handling).
 5. DQC queue filtered by assignment.
 6. Tracking dashboard, realtime notification bell, and coordinator reminders.
-7. Print-without-CO and logo in PDF export.
+7. Coordinator-only print/download of DQC-approved papers: CO hidden, Somaiya logo in the header.
 8. PWA manifest, icons and mobile responsive pass.
