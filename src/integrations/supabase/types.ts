@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_years: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+        }
+        Relationships: []
+      }
+      dqc_scopes: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          year_level?: Database["public"]["Enums"]["year_level"]
+        }
+        Relationships: []
+      }
+      institutions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -22,6 +85,7 @@ export type Database = {
           paper_id: string | null
           read: boolean
           recipient_email: string
+          type: string
         }
         Insert: {
           created_at?: string
@@ -30,6 +94,7 @@ export type Database = {
           paper_id?: string | null
           read?: boolean
           recipient_email: string
+          type?: string
         }
         Update: {
           created_at?: string
@@ -38,6 +103,7 @@ export type Database = {
           paper_id?: string | null
           read?: boolean
           recipient_email?: string
+          type?: string
         }
         Relationships: [
           {
@@ -49,45 +115,273 @@ export type Database = {
           },
         ]
       }
+      paper_assignments: {
+        Row: {
+          academic_year_id: string | null
+          assigned_by: string | null
+          assigned_to: string | null
+          created_at: string
+          decided_at: string | null
+          due_at: string | null
+          id: string
+          is_primary: boolean
+          last_reminded_at: string | null
+          last_reminded_by: string | null
+          note: string | null
+          paper_id: string
+          reminder_count: number
+          semester_id: string | null
+          status: Database["public"]["Enums"]["assignment_status"]
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+          year_level: Database["public"]["Enums"]["year_level"] | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          decided_at?: string | null
+          due_at?: string | null
+          id?: string
+          is_primary?: boolean
+          last_reminded_at?: string | null
+          last_reminded_by?: string | null
+          note?: string | null
+          paper_id: string
+          reminder_count?: number
+          semester_id?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          year_level?: Database["public"]["Enums"]["year_level"] | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          decided_at?: string | null
+          due_at?: string | null
+          id?: string
+          is_primary?: boolean
+          last_reminded_at?: string | null
+          last_reminded_by?: string | null
+          note?: string | null
+          paper_id?: string
+          reminder_count?: number
+          semester_id?: string | null
+          status?: Database["public"]["Enums"]["assignment_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          year_level?: Database["public"]["Enums"]["year_level"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paper_assignments_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paper_assignments_paper_id_fkey"
+            columns: ["paper_id"]
+            isOneToOne: false
+            referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paper_assignments_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       papers: {
         Row: {
+          academic_year_id: string | null
           created_at: string
           created_by: string
+          created_by_id: string | null
           diagrams: Json
           dqc_note: string | null
           dqc_signature: string | null
           id: string
+          institution_id: string | null
           meta: Json
           selected_set_index: number | null
+          semester_id: string | null
           sets: Json
           status: string
           updated_at: string
+          year_level: Database["public"]["Enums"]["year_level"] | null
         }
         Insert: {
+          academic_year_id?: string | null
           created_at?: string
           created_by?: string
+          created_by_id?: string | null
           diagrams?: Json
           dqc_note?: string | null
           dqc_signature?: string | null
           id?: string
+          institution_id?: string | null
           meta?: Json
           selected_set_index?: number | null
+          semester_id?: string | null
           sets?: Json
           status?: string
+          updated_at?: string
+          year_level?: Database["public"]["Enums"]["year_level"] | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          created_at?: string
+          created_by?: string
+          created_by_id?: string | null
+          diagrams?: Json
+          dqc_note?: string | null
+          dqc_signature?: string | null
+          id?: string
+          institution_id?: string | null
+          meta?: Json
+          selected_set_index?: number | null
+          semester_id?: string | null
+          sets?: Json
+          status?: string
+          updated_at?: string
+          year_level?: Database["public"]["Enums"]["year_level"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "papers_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "papers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "papers_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          department: string
+          email: string
+          full_name: string
+          id: string
+          institution_id: string | null
+          status: Database["public"]["Enums"]["account_status"]
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          department?: string
+          email: string
+          full_name?: string
+          id: string
+          institution_id?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
-          created_by?: string
-          diagrams?: Json
-          dqc_note?: string | null
-          dqc_signature?: string | null
+          department?: string
+          email?: string
+          full_name?: string
           id?: string
-          meta?: Json
-          selected_set_index?: number | null
-          sets?: Json
-          status?: string
+          institution_id?: string | null
+          status?: Database["public"]["Enums"]["account_status"]
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      semesters: {
+        Row: {
+          academic_year_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Insert: {
+          academic_year_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          year_level: Database["public"]["Enums"]["year_level"]
+        }
+        Update: {
+          academic_year_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          year_level?: Database["public"]["Enums"]["year_level"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semesters_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -96,10 +390,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      my_department: { Args: never; Returns: string }
+      my_institution: { Args: never; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      account_status: "pending" | "active" | "rejected"
+      app_role: "hod" | "dqc" | "designer" | "coord"
+      assignment_status: "assigned" | "in_review" | "approved" | "returned"
+      year_level: "SY" | "TY" | "LY"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -226,6 +531,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_status: ["pending", "active", "rejected"],
+      app_role: ["hod", "dqc", "designer", "coord"],
+      assignment_status: ["assigned", "in_review", "approved", "returned"],
+      year_level: ["SY", "TY", "LY"],
+    },
   },
 } as const
