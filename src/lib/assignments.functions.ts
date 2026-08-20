@@ -15,16 +15,18 @@ export const resolveDqcs = createServerFn({ method: "POST" })
     const ids = (scopes ?? []).map((s: { user_id: string }) => s.user_id);
     if (ids.length === 0) return [];
 
+    // Department is a free-text field, so it must not be a hard filter: a DQC
+    // member is valid for the whole institution, with same-department first.
     const { data: profiles } = await db
       .from("profiles")
       .select("id, email, full_name, department, institution_id, status")
       .in("id", ids)
       .eq("status", "active")
-      .eq("institution_id", me.institution_id)
-      .eq("department", me.department);
+      .eq("institution_id", me.institution_id);
 
     const candidates = profiles ?? [];
     if (candidates.length === 0) return [];
+
 
     const { data: open } = await db
       .from("paper_assignments")
