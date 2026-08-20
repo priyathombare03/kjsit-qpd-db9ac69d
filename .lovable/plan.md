@@ -93,6 +93,12 @@ This is why assignment is its own table rather than a column on `papers`: multip
 - Realtime notifications use a Supabase realtime subscription on `notifications` filtered to the signed-in user's email, replacing the 15-second polling in `AppHeader`.
 - Reminders are sent through a server function that verifies the caller is a coordinator or HOD, writes the notification, and increments the reminder counters.
 
+## Mobile / installable app (PWA)
+
+- The app gets a web app manifest plus Somaiya app icons, so faculty can open it in a phone browser and "Add to Home Screen" — it then launches full-screen with its own icon, like an app.
+- No offline mode: papers, AI generation and approvals all need the network, and an offline cache would risk showing stale paper data. Say the word if you want offline viewing of already-downloaded papers and I will add it properly.
+- Alongside installability, the screens faculty use most on a phone — login/register, notifications, the paper list and the tracking dashboard — get a mobile pass: stacked cards instead of wide tables, larger tap targets, and a bottom-safe-area-aware header.
+
 ## Suggested build order
 
 1. Migration: institutions, profiles (+status), roles, DQC scopes, academic years/semesters, assignments, notification types (+ grants and RLS).
@@ -101,7 +107,5 @@ This is why assignment is its own table rather than a column on `papers`: multip
 4. HOD assign flow with DQC resolution (including overlap handling).
 5. DQC queue filtered by assignment.
 6. Tracking dashboard, realtime notification bell, and coordinator reminders.
-4. HOD assign flow with DQC resolution (including overlap handling).
-5. DQC queue filtered by assignment.
-6. Tracking dashboard.
 7. Print-without-CO and logo in PDF export.
+8. PWA manifest, icons and mobile responsive pass.
