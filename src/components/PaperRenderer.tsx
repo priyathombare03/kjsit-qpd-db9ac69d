@@ -121,23 +121,25 @@ export function PaperRenderer({
 
       {!examView && <CourseOutcomesFooter meta={meta} />}
 
-      <div className="mt-8 flex items-end justify-between text-[11pt]">
-        <div>
-          <div className="w-56 border-t border-black pt-1 text-center">DQC Member</div>
-          {signatureUrl && (
-            <div className="mt-2">
-              <div className="text-xs text-gray-600">DQC Verified</div>
-              <img src={signatureUrl} alt="DQC signature" className="h-14 object-contain" />
-            </div>
-          )}
-        </div>
-        <div>
+      {!examView && (
+        <div className="mt-8 flex items-end justify-between text-[11pt]">
           <div>
-            Verified By: <b>Dr. Milind Nemade</b>
+            <div className="w-56 border-t border-black pt-1 text-center">DQC Member</div>
+            {signatureUrl && (
+              <div className="mt-2">
+                <div className="text-xs text-gray-600">DQC Verified</div>
+                <img src={signatureUrl} alt="DQC signature" className="h-14 object-contain" />
+              </div>
+            )}
           </div>
-          <div className="mt-1 w-56 border-t border-black pt-1 text-center">Head of the Department</div>
+          <div>
+            <div>
+              Verified By: <b>Dr. Milind Nemade</b>
+            </div>
+            <div className="mt-1 w-56 border-t border-black pt-1 text-center">Head of the Department</div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
